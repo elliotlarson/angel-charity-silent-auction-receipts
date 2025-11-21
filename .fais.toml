@@ -1,0 +1,2 @@
+stories_dir = 'stories'
+ai_command = 'claude --dangerously-skip-permissions'
