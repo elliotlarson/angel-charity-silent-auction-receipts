@@ -76,8 +76,6 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   def read_and_parse_csv(path) do
     path
     |> File.stream!()
-    |> Stream.map(&String.trim/1)
-    |> Stream.reject(&(&1 == ""))
     |> Mix.Tasks.ProcessAuctionItems.CSV.decode()
     |> Enum.to_list()
   end

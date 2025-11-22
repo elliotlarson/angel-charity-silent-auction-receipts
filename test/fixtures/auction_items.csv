@@ -5,3 +5,13 @@ Apply Sales Tax? (Y/N),ITEM ID,15 CHARACTER DESCRIPTION,,100 CHARACTER DESCRIPTI
 ,103,Landscaping,11,One Year Monthly Landscaping Services,37,"Enjoy a beautiful, worry-free yard all year long.",570,1200,480,100, 1 ,HOME
 ,110,not listed ,11,,0,,0,0,0,100, 1 ,,0
 ,115,Gift Cards,15,$1000 Gift Cards Downtown,74,"Downtown Tucson Gift Cards, accepted at more than 50 local businesses.",350,1000,400,100, 1 ,ENTERTAINMENT
+,125,Wine Trip,11,Portugal Wine Experience,45,"Win a trip to Portugal wine regions.
+
+INCLUDES:
+- 7 nights accommodation
+- Wine tastings
+- Cooking classes
+
+Travelers responsible for transportation.
+
+NOT INCLUDED: flights, meals",350,2000,800,100, 1 ,TRAVEL

@@ -35,6 +35,24 @@ defmodule Receipts.HtmlFormatterTest do
       assert HtmlFormatter.format_description(input) == expected
     end
 
+    test "converts bullet lists to ul/li tags" do
+      input = "- Item 1\n- Item 2\n- Item 3"
+      expected = "<ul>\n<li>Item 1</li>\n<li>Item 2</li>\n<li>Item 3</li>\n</ul>"
+      assert HtmlFormatter.format_description(input) == expected
+    end
+
+    test "handles bullet list with header line" do
+      input = "INCLUDES:\n- Item 1\n- Item 2"
+      expected = "<h5>INCLUDES:</h5>\n<ul>\n<li>Item 1</li>\n<li>Item 2</li>\n</ul>"
+      assert HtmlFormatter.format_description(input) == expected
+    end
+
+    test "handles mixed content with paragraphs and lists" do
+      input = "Intro text\n\n- Item 1\n- Item 2\n\nClosing text"
+      expected = "<p>Intro text</p>\n<ul>\n<li>Item 1</li>\n<li>Item 2</li>\n</ul>\n<p>Closing text</p>"
+      assert HtmlFormatter.format_description(input) == expected
+    end
+
     test "formats real Portuguese wine example from CSV" do
       input = """
       Win a a perfect trip to discover some Portuguese wine regions, while also enjoying the comfort of staying at two Portugal manor house estates. This one-week trip combines the discovery of the landscape and cultural jewels of the historic Minho and the UNESCO-protected Douro Valley with the enjoyment of high-quality wines and instructive insights into the production methods. Your accommodations are two internationally renowned wineries in the &ldquo;Solares de Portugal.&rdquo; Viana do Castelo and Lamego, Portugal
@@ -61,21 +79,46 @@ defmodule Receipts.HtmlFormatterTest do
 
       expected = """
       <p>Win a a perfect trip to discover some Portuguese wine regions, while also enjoying the comfort of staying at two Portugal manor house estates. This one-week trip combines the discovery of the landscape and cultural jewels of the historic Minho and the UNESCO-protected Douro Valley with the enjoyment of high-quality wines and instructive insights into the production methods. Your accommodations are two internationally renowned wineries in the &ldquo;Solares de Portugal.&rdquo; Viana do Castelo and Lamego, Portugal</p>
-      <p>INCLUDES:<br>
-      - 7 nights accommodation<br>
-      - 4 nights at Quinta do Ameal, Viana do Castelo and 3 nights at Casa de Santo Ant&oacute;nio de Britiande, Lamego<br>
-      - Welcome-Drink at each property</p>
-      <p>- 2 Cooking classes<br>
-      - 2 Wine tastings<br>
-      - Breakfast included daily<br>
-      - 2 Dinners (excluding drinks)</p>
-      <p>- Valid year-round; weekday check-ins only</p>
+      <h5>INCLUDES:</h5>
+      <ul>
+      <li>7 nights accommodation</li>
+      <li>4 nights at Quinta do Ameal, Viana do Castelo and 3 nights at Casa de Santo Ant&oacute;nio de Britiande, Lamego</li>
+      <li>Welcome-Drink at each property</li>
+      </ul>
+      <ul>
+      <li>2 Cooking classes</li>
+      <li>2 Wine tastings</li>
+      <li>Breakfast included daily</li>
+      <li>2 Dinners (excluding drinks)</li>
+      </ul>
+      <ul>
+      <li>Valid year-round; weekday check-ins only</li>
+      </ul>
       <p>Travelers are responsible for all transportation, including airport transfers and transportation between cities.</p>
       <p>NOT INCLUDED: flights, meals ; beverages not mentioned, rental car, fuel, tolls, guides, entrance fees to archeological sites, museums, and wineries outside the properties where you are staying, personal expenses, private or guided tours</p>
       <p>Subject to availability. Not valid during Thanksgiving, Christmas ; USA holidays.</p>
       """
       |> String.trim()
 
+      assert HtmlFormatter.format_description(input) == expected
+    end
+
+    test "trims whitespace from blocks" do
+      input = "  First  \n\n  - Item  "
+      result = HtmlFormatter.format_description(input)
+      assert result =~ "<p>First</p>"
+      assert result =~ "<li>Item</li>"
+    end
+
+    test "handles bullet lists with leading spaces" do
+      input = "INCLUDES:\n - Item 1\n - Item 2\n  - Item 3"
+      expected = "<h5>INCLUDES:</h5>\n<ul>\n<li>Item 1</li>\n<li>Item 2</li>\n<li>Item 3</li>\n</ul>"
+      assert HtmlFormatter.format_description(input) == expected
+    end
+
+    test "handles bullet lists with tabs" do
+      input = "INCLUDES:\n\t- Item 1\n\t- Item 2"
+      expected = "<h5>INCLUDES:</h5>\n<ul>\n<li>Item 1</li>\n<li>Item 2</li>\n</ul>"
       assert HtmlFormatter.format_description(input) == expected
     end
   end

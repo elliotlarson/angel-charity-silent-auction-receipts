@@ -8,6 +8,7 @@ defmodule Receipts.TextNormalizer do
   Normalizes text by:
   - Removing spaces before punctuation (., , ! ? ; :)
   - Adding spaces after sentence-ending punctuation (. ! ?)
+  - Adding spaces after closing parens when followed by letters or numbers
   - Collapsing multiple consecutive spaces into a single space
 
   Returns an empty string for nil values.
@@ -26,6 +27,7 @@ defmodule Receipts.TextNormalizer do
     text
     |> remove_spaces_before_punctuation()
     |> add_spaces_after_sentence_punctuation()
+    |> add_spaces_after_parens()
     |> collapse_multiple_spaces()
   end
 
@@ -37,7 +39,11 @@ defmodule Receipts.TextNormalizer do
     Regex.replace(~r/([.!?])([A-Z])/, text, "\\1 \\2")
   end
 
+  defp add_spaces_after_parens(text) do
+    Regex.replace(~r/\)([A-Za-z0-9])/, text, ") \\1")
+  end
+
   defp collapse_multiple_spaces(text) do
-    Regex.replace(~r/\s{2,}/, text, " ")
+    Regex.replace(~r/ {2,}/, text, " ")
   end
 end

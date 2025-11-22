@@ -90,5 +90,16 @@ defmodule Receipts.TextNormalizerTest do
       assert TextNormalizer.normalize("Dr.Smith") == "Dr. Smith"
       assert TextNormalizer.normalize("Mr.Jones") == "Mr. Jones"
     end
+
+    test "adds space after closing paren when followed by letter or number" do
+      assert TextNormalizer.normalize("(707)204-0037") == "(707) 204-0037"
+      assert TextNormalizer.normalize("text)more") == "text) more"
+      assert TextNormalizer.normalize("(item)A") == "(item) A"
+    end
+
+    test "does not add space after closing paren when followed by punctuation" do
+      assert TextNormalizer.normalize("text).") == "text)."
+      assert TextNormalizer.normalize("(item),") == "(item),"
+    end
   end
 end

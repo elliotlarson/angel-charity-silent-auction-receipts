@@ -139,7 +139,7 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
       {:ok, json_data} = File.read(json_path)
       {:ok, decoded} = Jason.decode(json_data, keys: :atoms)
 
-      assert length(decoded) == 2
+      assert length(decoded) == 3
 
       assert Enum.all?(decoded, fn item ->
                Map.has_key?(item, :item_id) and
@@ -157,6 +157,36 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
       assert first_item[:fair_market_value] == 1200
 
       refute Enum.any?(decoded, fn item -> item[:item_id] == 110 end)
+    end
+
+    test "processes multi-line descriptions with HTML formatting" do
+      csv_path = Path.join(@fixtures_dir, "auction_items.csv")
+
+      items =
+        csv_path
+        |> ProcessAuctionItems.read_and_parse_csv()
+        |> ProcessAuctionItems.clean_data()
+
+      item_125 = Enum.find(items, fn item -> item.item_id == 125 end)
+
+      assert item_125 != nil
+      assert item_125.short_title == "Wine Trip"
+      assert item_125.title == "Portugal Wine Experience"
+
+      expected_description = """
+      <p>Win a trip to Portugal wine regions.</p>
+      <h5>INCLUDES:</h5>
+      <ul>
+      <li>7 nights accommodation</li>
+      <li>Wine tastings</li>
+      <li>Cooking classes</li>
+      </ul>
+      <p>Travelers responsible for transportation.</p>
+      <p>NOT INCLUDED: flights, meals</p>
+      """
+      |> String.trim()
+
+      assert item_125.description == expected_description
     end
   end
 end
