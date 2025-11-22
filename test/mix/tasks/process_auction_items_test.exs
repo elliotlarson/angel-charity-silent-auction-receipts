@@ -70,7 +70,7 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
       assert result.categories == "HOME"
       assert result.short_title == "Landscaping"
       assert result.title == "One Year Monthly Landscaping Services"
-      assert result.description == "Enjoy a beautiful yard"
+      assert result.description == "<p>Enjoy a beautiful yard</p>"
       assert result.fair_market_value == 1200
     end
 

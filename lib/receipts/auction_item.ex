@@ -2,6 +2,7 @@ defmodule Receipts.AuctionItem do
   use Ecto.Schema
   import Ecto.Changeset
   alias Receipts.TextNormalizer
+  alias Receipts.HtmlFormatter
 
   @derive Jason.Encoder
   @primary_key false
@@ -73,6 +74,12 @@ defmodule Receipts.AuctionItem do
     changeset
     |> update_change(:short_title, &TextNormalizer.normalize/1)
     |> update_change(:title, &TextNormalizer.normalize/1)
-    |> update_change(:description, &TextNormalizer.normalize/1)
+    |> update_change(:description, &normalize_and_format_description/1)
+  end
+
+  defp normalize_and_format_description(text) do
+    text
+    |> TextNormalizer.normalize()
+    |> HtmlFormatter.format_description()
   end
 end

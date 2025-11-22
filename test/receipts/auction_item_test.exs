@@ -21,7 +21,7 @@ defmodule Receipts.AuctionItemTest do
       assert item.fair_market_value == 1200
       assert item.short_title == "Landscaping"
       assert item.title == "One Year Monthly Landscaping Services"
-      assert item.description == "Enjoy a beautiful yard"
+      assert item.description == "<p>Enjoy a beautiful yard</p>"
       assert item.categories == "HOME"
     end
 
@@ -167,7 +167,7 @@ defmodule Receipts.AuctionItemTest do
       assert changeset.valid?
       assert get_change(changeset, :short_title) == "artist,"
       assert get_change(changeset, :title) == "services."
-      assert get_change(changeset, :description) == "This is a test. Good stuff!"
+      assert get_change(changeset, :description) == "<p>This is a test. Good stuff!</p>"
     end
 
     test "sets defaults for notes and expiration_notice" do
@@ -222,7 +222,7 @@ defmodule Receipts.AuctionItemTest do
 
       assert item.short_title == "artist,"
       assert item.title == "services."
-      assert item.description == "This is cubism. Very nice!"
+      assert item.description == "<p>This is cubism. Very nice!</p>"
     end
 
     test "adds spaces after sentence-ending punctuation" do
@@ -237,7 +237,7 @@ defmodule Receipts.AuctionItemTest do
 
       item = AuctionItem.new(attrs)
 
-      assert item.description == "sentence. Another sentence! Third sentence? Fourth"
+      assert item.description == "<p>sentence. Another sentence! Third sentence? Fourth</p>"
     end
 
     test "collapses multiple spaces" do
@@ -254,7 +254,7 @@ defmodule Receipts.AuctionItemTest do
 
       assert item.short_title == "This is"
       assert item.title == "a test"
-      assert item.description == "with multiple spaces"
+      assert item.description == "<p>with multiple spaces</p>"
     end
 
     test "handles combined issues" do
@@ -269,7 +269,7 @@ defmodule Receipts.AuctionItemTest do
 
       item = AuctionItem.new(attrs)
 
-      assert item.description == "This is a rare item. Good for collectors; you! Lounge here."
+      assert item.description == "<p>This is a rare item. Good for collectors; you! Lounge here.</p>"
     end
 
     test "removes spaces before semicolons" do
@@ -284,7 +284,7 @@ defmodule Receipts.AuctionItemTest do
 
       item = AuctionItem.new(attrs)
 
-      assert item.description == "petting; learning and grooming; fun"
+      assert item.description == "<p>petting; learning and grooming; fun</p>"
     end
 
     test "handles nil values" do
@@ -318,7 +318,7 @@ defmodule Receipts.AuctionItemTest do
 
       assert item.short_title == "Clean Title"
       assert item.title == "Another Clean Title"
-      assert item.description == "This is already clean. No issues here!"
+      assert item.description == "<p>This is already clean. No issues here!</p>"
     end
   end
 end
