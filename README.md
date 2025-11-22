@@ -152,6 +152,31 @@ Generation complete!
 Successfully generated: 137 receipts
 ```
 
+### Manually Editing and Regenerating a Receipt
+
+If a receipt is too long and spills onto a second page, you can manually edit the HTML and regenerate just that PDF:
+
+1. **Edit the HTML file** in `receipts/html/receipt_<id>_<title>.html`
+   - Reduce font sizes, adjust spacing, or shorten text as needed
+   - The HTML uses Tailwind CSS classes for styling
+
+2. **Regenerate the PDF** from the edited HTML:
+   ```bash
+   mix regenerate_receipt <item_id>
+   ```
+
+**Example:**
+```bash
+# Edit receipts/html/receipt_120_belize.html manually
+# Then regenerate just that PDF:
+$ mix regenerate_receipt 120
+Reading HTML from: receipts/html/receipt_120_belize.html
+Generating PDF to: receipts/pdf/receipt_120_belize.pdf
+✓ Successfully regenerated PDF for item #120
+```
+
+This regenerates only the specified receipt's PDF without affecting any others.
+
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
