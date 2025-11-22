@@ -32,13 +32,37 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
 
   describe "build_item/2" do
     test "extracts all required fields from a row and converts numeric fields to integers" do
-      headers = ["Apply Sales Tax? (Y/N)", "ITEM ID", "15 CHARACTER DESCRIPTION", "",
-                 "100 CHARACTER DESCRIPTION", "", "1500 CHARACTER DESCRIPTION (OPTIONAL)",
-                 "", "FAIR MARKET VALUE", "ITEM STARTING BID", "MINIMUM BID INCREMENT",
-                 "GROUP ID", "CATEGORIES (OPTIONAL)"]
+      headers = [
+        "Apply Sales Tax? (Y/N)",
+        "ITEM ID",
+        "15 CHARACTER DESCRIPTION",
+        "",
+        "100 CHARACTER DESCRIPTION",
+        "",
+        "1500 CHARACTER DESCRIPTION (OPTIONAL)",
+        "",
+        "FAIR MARKET VALUE",
+        "ITEM STARTING BID",
+        "MINIMUM BID INCREMENT",
+        "GROUP ID",
+        "CATEGORIES (OPTIONAL)"
+      ]
 
-      row = ["", "103", "Landscaping", "11", "One Year Monthly Landscaping Services",
-             "37", "Enjoy a beautiful yard", "570", "1200", "480", "100", " 1 ", "HOME"]
+      row = [
+        "",
+        "103",
+        "Landscaping",
+        "11",
+        "One Year Monthly Landscaping Services",
+        "37",
+        "Enjoy a beautiful yard",
+        "570",
+        "1200",
+        "480",
+        "100",
+        " 1 ",
+        "HOME"
+      ]
 
       result = ProcessAuctionItems.build_item(row, headers)
 
@@ -51,9 +75,14 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
     end
 
     test "returns AuctionItem struct with typed fields" do
-      headers = ["ITEM ID", "15 CHARACTER DESCRIPTION", "100 CHARACTER DESCRIPTION",
-                 "1500 CHARACTER DESCRIPTION (OPTIONAL)", "FAIR MARKET VALUE",
-                 "CATEGORIES (OPTIONAL)"]
+      headers = [
+        "ITEM ID",
+        "15 CHARACTER DESCRIPTION",
+        "100 CHARACTER DESCRIPTION",
+        "1500 CHARACTER DESCRIPTION (OPTIONAL)",
+        "FAIR MARKET VALUE",
+        "CATEGORIES (OPTIONAL)"
+      ]
 
       row = ["103", "Short", "Title", "Desc", "100", "CAT"]
 
@@ -97,7 +126,8 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
       csv_path = Path.join(@fixtures_dir, "auction_items.csv")
       json_path = Path.join(@output_dir, "auction_items.json")
 
-      items = csv_path
+      items =
+        csv_path
         |> ProcessAuctionItems.read_and_parse_csv()
         |> ProcessAuctionItems.clean_data()
 
@@ -110,14 +140,15 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
       {:ok, decoded} = Jason.decode(json_data, keys: :atoms)
 
       assert length(decoded) == 2
+
       assert Enum.all?(decoded, fn item ->
-        Map.has_key?(item, :item_id) and
-        Map.has_key?(item, :categories) and
-        Map.has_key?(item, :short_title) and
-        Map.has_key?(item, :title) and
-        Map.has_key?(item, :description) and
-        Map.has_key?(item, :fair_market_value)
-      end)
+               Map.has_key?(item, :item_id) and
+                 Map.has_key?(item, :categories) and
+                 Map.has_key?(item, :short_title) and
+                 Map.has_key?(item, :title) and
+                 Map.has_key?(item, :description) and
+                 Map.has_key?(item, :fair_market_value)
+             end)
 
       first_item = Enum.at(decoded, 0)
       assert first_item[:item_id] == 103

@@ -23,6 +23,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     case csv_files do
       [] ->
         Mix.shell().error("No CSV files found in #{@csv_dir}")
+
       files ->
         selected_file = prompt_file_selection(files)
         process_file(selected_file)
@@ -35,6 +36,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
         files
         |> Enum.filter(&String.ends_with?(&1, ".csv"))
         |> Enum.sort()
+
       {:error, _} ->
         []
     end
@@ -58,7 +60,8 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     json_filename = Path.basename(filename, ".csv") <> ".json"
     json_path = Path.join(@json_dir, json_filename)
 
-    items = csv_path
+    items =
+      csv_path
       |> read_and_parse_csv()
       |> clean_data()
 
@@ -106,7 +109,8 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
   @doc false
   def build_item(row, headers) do
-    attrs = @field_mappings
+    attrs =
+      @field_mappings
       |> Enum.reduce(%{}, fn {header, field_name}, acc ->
         case find_header_index(headers, header) do
           nil -> Map.put(acc, field_name, "")
