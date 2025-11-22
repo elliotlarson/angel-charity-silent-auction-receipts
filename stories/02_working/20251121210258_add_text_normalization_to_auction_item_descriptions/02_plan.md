@@ -3,7 +3,7 @@
 ## Progress Checklist
 
 - [x] Step 1: Create TextNormalizer module for text cleaning
-- [ ] Step 2: Refactor AuctionItem to use Ecto embedded schema and changesets
+- [x] Step 2: Refactor AuctionItem to use Ecto embedded schema and changesets
 
 ## Overview
 
