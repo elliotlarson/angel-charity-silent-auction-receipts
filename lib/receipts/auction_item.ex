@@ -1,16 +1,27 @@
 defmodule Receipts.AuctionItem do
   @derive Jason.Encoder
   @enforce_keys [:item_id, :short_title, :title, :description, :fair_market_value, :categories]
-  defstruct [:item_id, :short_title, :title, :description, :fair_market_value, :categories]
+  defstruct [
+    :item_id,
+    :short_title,
+    :title,
+    :description,
+    :fair_market_value,
+    :categories,
+    :special_instructions,
+    :expiration_date
+  ]
 
   @type t :: %__MODULE__{
-    item_id: integer(),
-    short_title: String.t(),
-    title: String.t(),
-    description: String.t(),
-    fair_market_value: integer(),
-    categories: String.t()
-  }
+          item_id: integer(),
+          short_title: String.t(),
+          title: String.t(),
+          description: String.t(),
+          fair_market_value: integer(),
+          categories: String.t(),
+          special_instructions: String.t(),
+          expiration_date: String.t()
+        }
 
   def new(attrs) do
     %__MODULE__{
@@ -19,7 +30,9 @@ defmodule Receipts.AuctionItem do
       title: attrs[:title] || "",
       description: attrs[:description] || "",
       fair_market_value: parse_integer(attrs[:fair_market_value]),
-      categories: attrs[:categories] || ""
+      categories: attrs[:categories] || "",
+      special_instructions: attrs[:special_instructions] || "",
+      expiration_date: attrs[:expiration_date] || ""
     }
   end
 
