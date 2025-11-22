@@ -6,6 +6,7 @@ defmodule Receipts.TextNormalizer do
 
   @doc """
   Normalizes text by:
+  - Formatting phone numbers (XXX-XXX-XXXX to (XXX) XXX-XXXX)
   - Removing spaces before punctuation (., , ! ? ; :)
   - Adding spaces after sentence-ending punctuation (. ! ?)
   - Adding spaces after closing parens when followed by letters or numbers
@@ -25,6 +26,7 @@ defmodule Receipts.TextNormalizer do
 
   def normalize(text) when is_binary(text) do
     text
+    |> format_phone_numbers()
     |> remove_spaces_before_punctuation()
     |> add_spaces_after_sentence_punctuation()
     |> add_spaces_after_parens()
@@ -45,5 +47,9 @@ defmodule Receipts.TextNormalizer do
 
   defp collapse_multiple_spaces(text) do
     Regex.replace(~r/ {2,}/, text, " ")
+  end
+
+  defp format_phone_numbers(text) do
+    Regex.replace(~r/(\d{3})-(\d{3})-(\d{4})/, text, "(\\1) \\2-\\3")
   end
 end
