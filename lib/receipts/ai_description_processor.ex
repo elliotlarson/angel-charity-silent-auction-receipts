@@ -5,6 +5,7 @@ defmodule Receipts.AIDescriptionProcessor do
   """
 
   alias Receipts.AnthropicClient
+  alias Receipts.ProcessingCache
   require Logger
 
   @doc """
@@ -28,6 +29,20 @@ defmodule Receipts.AIDescriptionProcessor do
   end
 
   defp process_with_ai(attrs, description) do
+    case ProcessingCache.get(description) do
+      nil ->
+        process_and_cache(attrs, description)
+
+      {:ok, cached_result} ->
+        Logger.info("Using cached result for item #{attrs[:item_id]}")
+        apply_extraction(attrs, cached_result)
+
+      _ ->
+        process_and_cache(attrs, description)
+    end
+  end
+
+  defp process_and_cache(attrs, description) do
     prompt = build_prompt(description)
 
     case AnthropicClient.send_message(prompt) do
@@ -35,6 +50,7 @@ defmodule Receipts.AIDescriptionProcessor do
         case parse_response(response_text) do
           {:ok, extracted} ->
             Logger.info("Successfully processed description for item #{attrs[:item_id]}")
+            ProcessingCache.put(description, extracted)
             apply_extraction(attrs, extracted)
 
           {:error, reason} ->

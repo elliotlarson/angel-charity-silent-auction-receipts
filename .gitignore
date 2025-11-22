@@ -25,3 +25,6 @@ receipts-*.tar
 # Environment variables
 .env
 
+# AI processing cache
+db/auction_items/cache/
+
