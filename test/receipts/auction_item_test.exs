@@ -1,5 +1,6 @@
 defmodule Receipts.AuctionItemTest do
   use ExUnit.Case
+  import Ecto.Changeset, only: [get_change: 2]
 
   alias Receipts.AuctionItem
 
@@ -92,6 +93,117 @@ defmodule Receipts.AuctionItemTest do
 
       assert item.special_instructions == ""
       assert item.expiration_date == ""
+    end
+  end
+
+  describe "changeset/1" do
+    test "casts string integers to integers" do
+      attrs = %{
+        item_id: "103",
+        short_title: "Test",
+        title: "Test Title",
+        description: "Test description",
+        fair_market_value: "1200",
+        categories: "HOME"
+      }
+
+      changeset = AuctionItem.changeset(attrs)
+
+      assert changeset.valid?
+      assert get_change(changeset, :item_id) == 103
+      assert get_change(changeset, :fair_market_value) == 1200
+    end
+
+    test "applies defaults for nil values" do
+      attrs = %{
+        item_id: nil,
+        short_title: nil,
+        title: nil,
+        description: nil,
+        fair_market_value: nil,
+        categories: nil
+      }
+
+      changeset = AuctionItem.changeset(attrs)
+
+      assert changeset.valid?
+      assert get_change(changeset, :item_id) == 0
+      assert get_change(changeset, :short_title) == ""
+      assert get_change(changeset, :title) == ""
+      assert get_change(changeset, :description) == ""
+      assert get_change(changeset, :fair_market_value) == 0
+      assert get_change(changeset, :categories) == ""
+    end
+
+    test "applies defaults for empty string numeric fields" do
+      attrs = %{
+        item_id: "",
+        short_title: "Test",
+        title: "Test",
+        description: "Test",
+        fair_market_value: "",
+        categories: "TEST"
+      }
+
+      changeset = AuctionItem.changeset(attrs)
+
+      assert changeset.valid?
+      assert get_change(changeset, :item_id) == 0
+      assert get_change(changeset, :fair_market_value) == 0
+    end
+
+    test "normalizes text fields" do
+      attrs = %{
+        item_id: "1",
+        short_title: "artist ,",
+        title: "services .",
+        description: "This is  a test.Good stuff !",
+        fair_market_value: "100",
+        categories: "ART"
+      }
+
+      changeset = AuctionItem.changeset(attrs)
+
+      assert changeset.valid?
+      assert get_change(changeset, :short_title) == "artist,"
+      assert get_change(changeset, :title) == "services."
+      assert get_change(changeset, :description) == "This is a test. Good stuff!"
+    end
+
+    test "sets defaults for special_instructions and expiration_date" do
+      attrs = %{
+        item_id: "1",
+        short_title: "Test",
+        title: "Test",
+        description: "Test",
+        fair_market_value: "100",
+        categories: "TEST"
+      }
+
+      changeset = AuctionItem.changeset(attrs)
+
+      assert changeset.valid?
+      assert get_change(changeset, :special_instructions) == ""
+      assert get_change(changeset, :expiration_date) == ""
+    end
+
+    test "preserves non-nil values" do
+      attrs = %{
+        item_id: "123",
+        short_title: "Short",
+        title: "Title",
+        description: "Description",
+        fair_market_value: "500",
+        categories: "CATEGORY",
+        special_instructions: "Call ahead",
+        expiration_date: "12/31/2026"
+      }
+
+      changeset = AuctionItem.changeset(attrs)
+
+      assert changeset.valid?
+      assert get_change(changeset, :special_instructions) == "Call ahead"
+      assert get_change(changeset, :expiration_date) == "12/31/2026"
     end
   end
 

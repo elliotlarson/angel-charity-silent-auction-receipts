@@ -1,49 +1,67 @@
 defmodule Receipts.AuctionItem do
+  use Ecto.Schema
+  import Ecto.Changeset
   alias Receipts.TextNormalizer
 
   @derive Jason.Encoder
-  @enforce_keys [:item_id, :short_title, :title, :description, :fair_market_value, :categories]
-  defstruct [
-    :item_id,
-    :short_title,
-    :title,
-    :description,
-    :fair_market_value,
-    :categories,
-    :special_instructions,
-    :expiration_date
-  ]
-
-  @type t :: %__MODULE__{
-          item_id: integer(),
-          short_title: String.t(),
-          title: String.t(),
-          description: String.t(),
-          fair_market_value: integer(),
-          categories: String.t(),
-          special_instructions: String.t(),
-          expiration_date: String.t()
-        }
+  @primary_key false
+  embedded_schema do
+    field :item_id, :integer
+    field :short_title, :string
+    field :title, :string
+    field :description, :string
+    field :fair_market_value, :integer
+    field :categories, :string
+    field :special_instructions, :string
+    field :expiration_date, :string
+  end
 
   def new(attrs) do
-    %__MODULE__{
-      item_id: parse_integer(attrs[:item_id]),
-      short_title: TextNormalizer.normalize(attrs[:short_title]),
-      title: TextNormalizer.normalize(attrs[:title]),
-      description: TextNormalizer.normalize(attrs[:description]),
-      fair_market_value: parse_integer(attrs[:fair_market_value]),
-      categories: attrs[:categories] || "",
-      special_instructions: attrs[:special_instructions] || "",
-      expiration_date: attrs[:expiration_date] || ""
-    }
+    attrs
+    |> changeset()
+    |> apply_action!(:insert)
   end
 
-  defp parse_integer(value) when is_binary(value) do
-    case Integer.parse(value) do
-      {int, _} -> int
-      :error -> 0
+  def changeset(attrs) do
+    %__MODULE__{}
+    |> cast(attrs, [
+      :item_id,
+      :short_title,
+      :title,
+      :description,
+      :fair_market_value,
+      :categories,
+      :special_instructions,
+      :expiration_date
+    ])
+    |> apply_defaults()
+    |> normalize_text_fields()
+  end
+
+  defp normalize_text_fields(changeset) do
+    changeset
+    |> update_change(:short_title, &TextNormalizer.normalize/1)
+    |> update_change(:title, &TextNormalizer.normalize/1)
+    |> update_change(:description, &TextNormalizer.normalize/1)
+  end
+
+  defp apply_defaults(changeset) do
+    changeset
+    |> put_default(:item_id, 0)
+    |> put_default(:short_title, "")
+    |> put_default(:title, "")
+    |> put_default(:description, "")
+    |> put_default(:fair_market_value, 0)
+    |> put_default(:categories, "")
+    |> put_default(:special_instructions, "")
+    |> put_default(:expiration_date, "")
+  end
+
+  defp put_default(changeset, field, default) do
+    case get_field(changeset, field) do
+      nil -> put_change(changeset, field, default)
+      "" when field in [:item_id, :fair_market_value] -> put_change(changeset, field, default)
+      _ -> changeset
     end
   end
-
-  defp parse_integer(_), do: 0
 end

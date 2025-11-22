@@ -22,7 +22,8 @@ defmodule Receipts.MixProject do
   defp deps do
     [
       {:jason, "~> 1.4"},
-      {:nimble_csv, "~> 1.2"}
+      {:nimble_csv, "~> 1.2"},
+      {:ecto, "~> 3.11"}
     ]
   end
 end
