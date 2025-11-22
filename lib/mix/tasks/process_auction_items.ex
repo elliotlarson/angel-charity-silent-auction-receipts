@@ -4,6 +4,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   @shortdoc "Process auction items CSV files and convert to JSON"
 
   @csv_dir "db/auction_items/csv"
+  @json_dir "db/auction_items/json"
 
   @field_mappings %{
     "ITEM ID" => :item_id,
@@ -52,11 +53,18 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
   defp process_file(filename) do
     csv_path = Path.join(@csv_dir, filename)
+    json_filename = Path.basename(filename, ".csv") <> ".json"
+    json_path = Path.join(@json_dir, json_filename)
 
-    csv_path
-    |> read_and_parse_csv()
-    |> clean_data()
-    |> IO.inspect(label: "Cleaned data")
+    items = csv_path
+      |> read_and_parse_csv()
+      |> clean_data()
+
+    json_content = Jason.encode!(items, pretty: true)
+    File.write!(json_path, json_content)
+
+    Mix.shell().info("Successfully processed #{length(items)} items")
+    Mix.shell().info("Output saved to: #{json_path}")
   end
 
   @doc false

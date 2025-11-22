@@ -79,4 +79,53 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
       assert result[:categories] == "HOME"
     end
   end
+
+  describe "full processing pipeline" do
+    @fixtures_dir "test/fixtures"
+    @output_dir "test/tmp"
+
+    setup do
+      File.mkdir_p!(@output_dir)
+
+      on_exit(fn ->
+        File.rm_rf!(@output_dir)
+      end)
+
+      :ok
+    end
+
+    test "processes CSV and creates valid JSON output" do
+      csv_path = Path.join(@fixtures_dir, "auction_items.csv")
+      json_path = Path.join(@output_dir, "auction_items.json")
+
+      items = csv_path
+        |> ProcessAuctionItems.read_and_parse_csv()
+        |> ProcessAuctionItems.clean_data()
+
+      json_content = Jason.encode!(items, pretty: true)
+      File.write!(json_path, json_content)
+
+      assert File.exists?(json_path)
+
+      {:ok, json_data} = File.read(json_path)
+      {:ok, decoded} = Jason.decode(json_data, keys: :atoms)
+
+      assert length(decoded) == 2
+      assert Enum.all?(decoded, fn item ->
+        Map.has_key?(item, :item_id) and
+        Map.has_key?(item, :categories) and
+        Map.has_key?(item, :short_title) and
+        Map.has_key?(item, :title) and
+        Map.has_key?(item, :description) and
+        Map.has_key?(item, :fair_market_value)
+      end)
+
+      first_item = Enum.at(decoded, 0)
+      assert first_item[:item_id] == "103"
+      assert first_item[:categories] == "HOME"
+      assert first_item[:short_title] == "Landscaping"
+
+      refute Enum.any?(decoded, fn item -> item[:item_id] == "110" end)
+    end
+  end
 end
