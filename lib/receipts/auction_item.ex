@@ -38,13 +38,6 @@ defmodule Receipts.AuctionItem do
     |> normalize_text_fields()
   end
 
-  defp normalize_text_fields(changeset) do
-    changeset
-    |> update_change(:short_title, &TextNormalizer.normalize/1)
-    |> update_change(:title, &TextNormalizer.normalize/1)
-    |> update_change(:description, &TextNormalizer.normalize/1)
-  end
-
   defp apply_defaults(changeset) do
     changeset
     |> put_default(:item_id, 0)
@@ -58,10 +51,28 @@ defmodule Receipts.AuctionItem do
   end
 
   defp put_default(changeset, field, default) do
-    case get_field(changeset, field) do
-      nil -> put_change(changeset, field, default)
-      "" when field in [:item_id, :fair_market_value] -> put_change(changeset, field, default)
-      _ -> changeset
+    value = get_field(changeset, field)
+    in_changes = Map.has_key?(changeset.changes, field)
+
+    should_apply =
+      case {field, value, in_changes} do
+        {_, nil, _} -> true
+        {f, "", _} when f in [:item_id, :fair_market_value] -> true
+        {_, _, false} -> true  # Not in changes, apply default explicitly
+        _ -> false
+      end
+
+    if should_apply do
+      put_change(changeset, field, default)
+    else
+      changeset
     end
+  end
+
+  defp normalize_text_fields(changeset) do
+    changeset
+    |> update_change(:short_title, &TextNormalizer.normalize/1)
+    |> update_change(:title, &TextNormalizer.normalize/1)
+    |> update_change(:description, &TextNormalizer.normalize/1)
   end
 end

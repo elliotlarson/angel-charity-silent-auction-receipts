@@ -112,10 +112,20 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     attrs =
       @field_mappings
       |> Enum.reduce(%{}, fn {header, field_name}, acc ->
-        case find_header_index(headers, header) do
-          nil -> Map.put(acc, field_name, "")
-          index -> Map.put(acc, field_name, get_column(row, index))
-        end
+        value =
+          case find_header_index(headers, header) do
+            nil -> ""
+            index -> get_column(row, index)
+          end
+
+        # Convert empty strings to nil for integer fields so Ecto defaults apply
+        normalized_value =
+          case {field_name, value} do
+            {field, ""} when field in [:item_id, :fair_market_value] -> nil
+            _ -> value
+          end
+
+        Map.put(acc, field_name, normalized_value)
       end)
 
     AuctionItem.new(attrs)
