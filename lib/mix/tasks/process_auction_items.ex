@@ -18,6 +18,15 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   }
 
   def run(args) do
+    # Start required applications
+    Application.ensure_all_started(:req)
+
+    # Load .env file if it exists
+    if File.exists?(".env") do
+      {:ok, vars} = Dotenvy.source(".env")
+      Enum.each(vars, fn {k, v} -> System.put_env(k, v) end)
+    end
+
     {opts, _, _} =
       OptionParser.parse(args,
         switches: [skip_ai_processing: :boolean],
@@ -96,9 +105,21 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   def clean_data(rows, opts \\ []) do
     [_title_row, headers, _empty_row | data_rows] = rows
 
-    data_rows
-    |> Enum.reject(&is_placeholder_row?/1)
-    |> Enum.map(&build_item(&1, headers, opts))
+    valid_rows = Enum.reject(data_rows, &is_placeholder_row?/1)
+    total = length(valid_rows)
+    skip_ai = Keyword.get(opts, :skip_ai_processing, false)
+
+    valid_rows
+    |> Enum.with_index(1)
+    |> Enum.map(fn {row, index} ->
+      item = build_item(row, headers, opts)
+
+      unless skip_ai do
+        Mix.shell().info("Processed item #{index}/#{total} (ID: #{item.item_id})")
+      end
+
+      item
+    end)
   end
 
   @doc false

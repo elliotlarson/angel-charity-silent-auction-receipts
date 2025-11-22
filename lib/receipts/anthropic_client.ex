@@ -20,7 +20,7 @@ defmodule Receipts.AnthropicClient do
     * `{:error, reason}` - On failure
   """
   def send_message(prompt, opts \\ []) do
-    api_key = Application.get_env(:receipts, :anthropic_api_key)
+    api_key = System.get_env("ANTHROPIC_API_KEY")
 
     if is_nil(api_key) or api_key == "" do
       {:error, :missing_api_key}

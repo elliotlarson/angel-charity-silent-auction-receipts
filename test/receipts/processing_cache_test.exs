@@ -20,9 +20,9 @@ defmodule Receipts.ProcessingCacheTest do
       description = "Test auction item description"
 
       result = %{
-        "expiration_notice" => "12/31/2026",
-        "notes" => "Call ahead",
-        "description" => "Clean description"
+        expiration_notice: "12/31/2026",
+        notes: "Call ahead",
+        description: "Clean description"
       }
 
       ProcessingCache.put(description, result)
@@ -32,11 +32,11 @@ defmodule Receipts.ProcessingCacheTest do
     end
 
     test "different descriptions have different cache keys" do
-      ProcessingCache.put("description 1", %{"value" => "1"})
-      ProcessingCache.put("description 2", %{"value" => "2"})
+      ProcessingCache.put("description 1", %{value: "1"})
+      ProcessingCache.put("description 2", %{value: "2"})
 
-      assert ProcessingCache.get("description 1") == {:ok, %{"value" => "1"}}
-      assert ProcessingCache.get("description 2") == {:ok, %{"value" => "2"}}
+      assert ProcessingCache.get("description 1") == {:ok, %{value: "1"}}
+      assert ProcessingCache.get("description 2") == {:ok, %{value: "2"}}
     end
   end
 end

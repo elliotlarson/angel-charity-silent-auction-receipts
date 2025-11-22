@@ -5,6 +5,18 @@ defmodule Receipts.AIDescriptionProcessorTest do
   alias Receipts.AIDescriptionProcessor
 
   describe "process/2" do
+    setup do
+      original_key = System.get_env("ANTHROPIC_API_KEY")
+      on_exit(fn ->
+        if original_key do
+          System.put_env("ANTHROPIC_API_KEY", original_key)
+        else
+          System.delete_env("ANTHROPIC_API_KEY")
+        end
+      end)
+      :ok
+    end
+
     test "returns attrs unchanged when skip_ai_processing is true" do
       attrs = %{
         item_id: "123",
@@ -22,7 +34,7 @@ defmodule Receipts.AIDescriptionProcessorTest do
     end
 
     test "logs warning and returns original attrs when API call fails" do
-      Application.put_env(:receipts, :anthropic_api_key, nil)
+      System.delete_env("ANTHROPIC_API_KEY")
 
       attrs = %{
         item_id: "123",

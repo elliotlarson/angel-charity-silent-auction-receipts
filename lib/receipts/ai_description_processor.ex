@@ -6,6 +6,7 @@ defmodule Receipts.AIDescriptionProcessor do
 
   alias Receipts.AnthropicClient
   alias Receipts.ProcessingCache
+  alias Receipts.TextNormalizer
   require Logger
 
   @doc """
@@ -34,7 +35,7 @@ defmodule Receipts.AIDescriptionProcessor do
         process_and_cache(attrs, description)
 
       {:ok, cached_result} ->
-        Logger.info("Using cached result for item #{attrs[:item_id]}")
+        Logger.debug("Using cached result for item #{attrs[:item_id]}")
         apply_extraction(attrs, cached_result)
 
       _ ->
@@ -49,7 +50,7 @@ defmodule Receipts.AIDescriptionProcessor do
       {:ok, response_text} ->
         case parse_response(response_text) do
           {:ok, extracted} ->
-            Logger.info("Successfully processed description for item #{attrs[:item_id]}")
+            Logger.debug("AI processed item #{attrs[:item_id]}")
             ProcessingCache.put(description, extracted)
             apply_extraction(attrs, extracted)
 
@@ -93,20 +94,33 @@ defmodule Receipts.AIDescriptionProcessor do
   end
 
   defp parse_response(response_text) do
-    case Jason.decode(response_text) do
+    # Try to extract JSON from markdown code blocks if present
+    cleaned_text =
+      case Regex.run(~r/```(?:json)?\s*(\{.*?\})\s*```/s, response_text) do
+        [_, json] -> json
+        nil -> response_text
+      end
+      |> String.trim()
+
+    case Jason.decode(cleaned_text) do
       {:ok, %{"expiration_notice" => exp, "notes" => notes, "description" => desc}} ->
         {:ok, %{expiration_notice: exp, notes: notes, description: desc}}
 
-      _ ->
+      {:ok, parsed} ->
+        Logger.warning("Unexpected JSON structure: #{inspect(parsed)}")
+        {:error, :invalid_response_format}
+
+      {:error, reason} ->
+        Logger.warning("Failed to parse JSON: #{inspect(reason)}. Response: #{String.slice(response_text, 0..200)}")
         {:error, :invalid_response_format}
     end
   end
 
   defp apply_extraction(attrs, %{expiration_notice: exp, notes: notes, description: clean_desc}) do
     attrs
-    |> put_if_present(:expiration_notice, exp)
-    |> put_if_present(:notes, notes)
-    |> put_if_present(:description, clean_desc)
+    |> put_if_present(:expiration_notice, TextNormalizer.normalize(exp))
+    |> put_if_present(:notes, TextNormalizer.normalize(notes))
+    |> put_if_present(:description, TextNormalizer.normalize(clean_desc))
   end
 
   defp put_if_present(attrs, _key, ""), do: attrs

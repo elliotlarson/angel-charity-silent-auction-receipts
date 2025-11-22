@@ -11,7 +11,7 @@ defmodule Receipts.ProcessingCache do
     cache_path = Path.join(@cache_dir, "#{cache_key}.json")
 
     case File.read(cache_path) do
-      {:ok, content} -> Jason.decode(content)
+      {:ok, content} -> Jason.decode(content, keys: :atoms)
       {:error, _} -> nil
     end
   end

@@ -24,7 +24,8 @@ defmodule Receipts.MixProject do
       {:jason, "~> 1.4"},
       {:nimble_csv, "~> 1.2"},
       {:ecto, "~> 3.11"},
-      {:req, "~> 0.5.0"}
+      {:req, "~> 0.5.0"},
+      {:dotenvy, "~> 0.8.0"}
     ]
   end
 end
