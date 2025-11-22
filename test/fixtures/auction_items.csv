@@ -2,6 +2,6 @@
 ,,,,,,,,,,,,,,,
 Apply Sales Tax? (Y/N),ITEM ID,15 CHARACTER DESCRIPTION,,100 CHARACTER DESCRIPTION,,1500 CHARACTER DESCRIPTION (OPTIONAL),,FAIR MARKET VALUE,ITEM STARTING BID,MINIMUM BID INCREMENT,GROUP ID,CATEGORIES (OPTIONAL)
 ,,,,,,,,,,,,,,,
-,103,Landscaping,11,One Year Monthly Landscaping Services,37,Enjoy a beautiful yard,570,1200,480,100, 1 ,HOME
+,103,Landscaping,11,One Year Monthly Landscaping Services,37,"Enjoy a beautiful, worry-free yard all year long.",570,1200,480,100, 1 ,HOME
 ,110,not listed ,11,,0,,0,0,0,100, 1 ,,0
-,115,Gift Cards,15,$1000 Gift Cards Downtown,74,Downtown Tucson Gift Cards,350,1000,400,100, 1 ,ENTERTAINMENT
+,115,Gift Cards,15,$1000 Gift Cards Downtown,74,"Downtown Tucson Gift Cards, accepted at more than 50 local businesses.",350,1000,400,100, 1 ,ENTERTAINMENT

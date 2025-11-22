@@ -79,7 +79,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
   @doc false
   def clean_data(rows) do
-    [_title_row, _empty_row, headers | data_rows] = rows
+    [_title_row, headers, _empty_row | data_rows] = rows
 
     data_rows
     |> Enum.reject(&is_placeholder_row?/1)
