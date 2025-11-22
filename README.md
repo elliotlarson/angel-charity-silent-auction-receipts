@@ -8,17 +8,21 @@ When you receive a new CSV file from Angel Charity, follow these steps:
 
 1. **Place CSV file** in `db/auction_items/csv/`
 2. **Process CSV to JSON** with AI extraction:
+
    ```bash
    mix process_auction_items
    ```
+
    - Select the CSV file from the list
    - AI will extract expiration dates and special notes
    - Output saved to `db/auction_items/json/`
 
 3. **Generate PDF and HTML receipts**:
+
    ```bash
    mix generate_receipts
    ```
+
    - Reads all JSON files from `db/auction_items/json/`
    - Generates PDFs in `receipts/pdf/`
    - Generates HTML in `receipts/html/`
@@ -53,6 +57,7 @@ mix process_auction_items --skip-ai-processing
 ```
 
 The task will:
+
 1. Display a list of available CSV files in `db/auction_items/csv/`
 2. Prompt you to select a file by number
 3. Process the CSV file:
@@ -72,6 +77,7 @@ The task uses Claude (Anthropic API) to intelligently extract:
 - **Cleaned descriptions** - Original description with expiration and notes removed
 
 **Benefits:**
+
 - ✅ **Cached** - Results are cached, so re-running is instant
 - ✅ **Smart** - Understands natural language and context
 - ✅ **Graceful** - Falls back to original description if extraction fails
@@ -115,6 +121,7 @@ mix generate_receipts
 ```
 
 The task will:
+
 1. Read all JSON files from `db/auction_items/json/`
 2. Generate a PDF receipt for each item in `receipts/pdf/`
 3. Generate an HTML receipt for each item in `receipts/html/`
@@ -166,6 +173,7 @@ If a receipt is too long and spills onto a second page, you can manually edit th
    ```
 
 **Example:**
+
 ```bash
 # Edit receipts/html/receipt_120_belize.html manually
 # Then regenerate just that PDF:
@@ -176,20 +184,3 @@ Generating PDF to: receipts/pdf/receipt_120_belize.pdf
 ```
 
 This regenerates only the specified receipt's PDF without affecting any others.
-
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `receipts` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:receipts, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/receipts>.
