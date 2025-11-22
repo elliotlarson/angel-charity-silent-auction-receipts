@@ -17,7 +17,13 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     "FAIR MARKET VALUE" => :fair_market_value
   }
 
-  def run(_args) do
+  def run(args) do
+    {opts, _, _} =
+      OptionParser.parse(args,
+        switches: [skip_ai_processing: :boolean],
+        aliases: [s: :skip_ai_processing]
+      )
+
     csv_files = list_csv_files()
 
     case csv_files do
@@ -26,7 +32,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
       files ->
         selected_file = prompt_file_selection(files)
-        process_file(selected_file)
+        process_file(selected_file, opts)
     end
   end
 
@@ -55,15 +61,21 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     Enum.at(files, selection - 1)
   end
 
-  defp process_file(filename) do
+  defp process_file(filename, opts) do
     csv_path = Path.join(@csv_dir, filename)
     json_filename = Path.basename(filename, ".csv") <> ".json"
     json_path = Path.join(@json_dir, json_filename)
 
+    skip_ai = Keyword.get(opts, :skip_ai_processing, false)
+
+    unless skip_ai do
+      Mix.shell().info("AI processing enabled - this may take a few minutes...")
+    end
+
     items =
       csv_path
       |> read_and_parse_csv()
-      |> clean_data()
+      |> clean_data(opts)
 
     json_content = Jason.encode!(items, pretty: true)
     File.write!(json_path, json_content)
@@ -81,12 +93,12 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   end
 
   @doc false
-  def clean_data(rows) do
+  def clean_data(rows, opts \\ []) do
     [_title_row, headers, _empty_row | data_rows] = rows
 
     data_rows
     |> Enum.reject(&is_placeholder_row?/1)
-    |> Enum.map(&build_item(&1, headers))
+    |> Enum.map(&build_item(&1, headers, opts))
   end
 
   @doc false
@@ -106,7 +118,9 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   end
 
   @doc false
-  def build_item(row, headers) do
+  def build_item(row, headers, opts \\ []) do
+    alias Receipts.AIDescriptionProcessor
+
     attrs =
       @field_mappings
       |> Enum.reduce(%{}, fn {header, field_name}, acc ->
@@ -126,7 +140,9 @@ defmodule Mix.Tasks.ProcessAuctionItems do
         Map.put(acc, field_name, normalized_value)
       end)
 
-    AuctionItem.new(attrs)
+    attrs
+    |> AIDescriptionProcessor.process(opts)
+    |> AuctionItem.new()
   end
 
   defp find_header_index(headers, target_header) do

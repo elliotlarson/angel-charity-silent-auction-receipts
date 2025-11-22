@@ -30,7 +30,7 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
     end
   end
 
-  describe "build_item/2" do
+  describe "build_item/3" do
     test "extracts all required fields from a row and converts numeric fields to integers" do
       headers = [
         "Apply Sales Tax? (Y/N)",
@@ -64,7 +64,7 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
         "HOME"
       ]
 
-      result = ProcessAuctionItems.build_item(row, headers)
+      result = ProcessAuctionItems.build_item(row, headers, skip_ai_processing: true)
 
       assert result.item_id == 103
       assert result.categories == "HOME"
@@ -86,7 +86,7 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
 
       row = ["103", "Short", "Title", "Desc", "100", "CAT"]
 
-      result = ProcessAuctionItems.build_item(row, headers)
+      result = ProcessAuctionItems.build_item(row, headers, skip_ai_processing: true)
 
       assert is_struct(result, Receipts.AuctionItem)
       assert is_integer(result.item_id)
@@ -101,10 +101,22 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
       headers = ["ITEM ID", "CATEGORIES (OPTIONAL)"]
       row = ["  103  ", "  HOME  "]
 
-      result = ProcessAuctionItems.build_item(row, headers)
+      result = ProcessAuctionItems.build_item(row, headers, skip_ai_processing: true)
 
       assert result.item_id == 103
       assert result.categories == "HOME"
+    end
+
+    test "skips AI processing when flag is set" do
+      row = ["Y", "103", "Short", "", "Title", "", "Description", "", "1200", "480", "100", "1", "HOME", "", "", "", ""]
+      headers = ["Apply Sales Tax? (Y/N)", "ITEM ID", "15 CHARACTER DESCRIPTION", "", "100 CHARACTER DESCRIPTION", "", "1500 CHARACTER DESCRIPTION (OPTIONAL)", "", "FAIR MARKET VALUE", "ITEM STARTING BID", "MINIMUM BID INCREMENT", "GROUP ID", "CATEGORIES (OPTIONAL)", "", "BOA", "", ""]
+
+      item = ProcessAuctionItems.build_item(row, headers, skip_ai_processing: true)
+
+      assert item.item_id == 103
+      assert item.short_title == "Short"
+      assert item.title == "Title"
+      assert item.description == "<p>Description</p>"
     end
   end
 
@@ -129,7 +141,7 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
       items =
         csv_path
         |> ProcessAuctionItems.read_and_parse_csv()
-        |> ProcessAuctionItems.clean_data()
+        |> ProcessAuctionItems.clean_data(skip_ai_processing: true)
 
       json_content = Jason.encode!(items, pretty: true)
       File.write!(json_path, json_content)
@@ -165,7 +177,7 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
       items =
         csv_path
         |> ProcessAuctionItems.read_and_parse_csv()
-        |> ProcessAuctionItems.clean_data()
+        |> ProcessAuctionItems.clean_data(skip_ai_processing: true)
 
       item_125 = Enum.find(items, fn item -> item.item_id == 125 end)
 
