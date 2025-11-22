@@ -25,7 +25,8 @@ defmodule Receipts.MixProject do
       {:nimble_csv, "~> 1.2"},
       {:ecto, "~> 3.11"},
       {:req, "~> 0.5.0"},
-      {:dotenvy, "~> 0.8.0"}
+      {:dotenvy, "~> 0.8.0"},
+      {:chromic_pdf, "~> 1.17"}
     ]
   end
 end
