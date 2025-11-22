@@ -5,6 +5,15 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
   @csv_dir "db/auction_items/csv"
 
+  @field_mappings %{
+    "ITEM ID" => :item_id,
+    "CATEGORIES (OPTIONAL)" => :categories,
+    "15 CHARACTER DESCRIPTION" => :short_title,
+    "100 CHARACTER DESCRIPTION" => :title,
+    "1500 CHARACTER DESCRIPTION (OPTIONAL)" => :description,
+    "FAIR MARKET VALUE" => :fair_market_value
+  }
+
   def run(_args) do
     csv_files = list_csv_files()
 
@@ -85,7 +94,21 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     |> String.trim()
   end
 
-  defp build_item(_row, _headers) do
-    %{}
+  @doc false
+  def build_item(row, headers) do
+    @field_mappings
+    |> Enum.reduce(%{}, fn {header, field_name}, acc ->
+      case find_header_index(headers, header) do
+        nil -> Map.put(acc, field_name, "")
+        index -> Map.put(acc, field_name, get_column(row, index))
+      end
+    end)
+  end
+
+  defp find_header_index(headers, target_header) do
+    headers
+    |> Enum.find_index(fn header ->
+      String.upcase(String.trim(header)) == target_header
+    end)
   end
 end

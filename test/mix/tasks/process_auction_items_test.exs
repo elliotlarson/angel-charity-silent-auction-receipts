@@ -29,4 +29,54 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
       assert ProcessAuctionItems.is_placeholder_row?(valid_row) == false
     end
   end
+
+  describe "build_item/2" do
+    test "extracts all required fields from a row" do
+      headers = ["Apply Sales Tax? (Y/N)", "ITEM ID", "15 CHARACTER DESCRIPTION", "",
+                 "100 CHARACTER DESCRIPTION", "", "1500 CHARACTER DESCRIPTION (OPTIONAL)",
+                 "", "FAIR MARKET VALUE", "ITEM STARTING BID", "MINIMUM BID INCREMENT",
+                 "GROUP ID", "CATEGORIES (OPTIONAL)"]
+
+      row = ["", "103", "Landscaping", "11", "One Year Monthly Landscaping Services",
+             "37", "Enjoy a beautiful yard", "570", "1200", "480", "100", " 1 ", "HOME"]
+
+      result = ProcessAuctionItems.build_item(row, headers)
+
+      assert Enum.sort(Map.keys(result)) == [:categories, :description, :fair_market_value,
+                                              :item_id, :short_title, :title]
+      assert result[:item_id] == "103"
+      assert result[:categories] == "HOME"
+      assert result[:short_title] == "Landscaping"
+      assert result[:title] == "One Year Monthly Landscaping Services"
+      assert result[:description] == "Enjoy a beautiful yard"
+      assert result[:fair_market_value] == "1200"
+    end
+
+    test "uses atom keys for field names" do
+      headers = ["ITEM ID", "15 CHARACTER DESCRIPTION", "100 CHARACTER DESCRIPTION",
+                 "1500 CHARACTER DESCRIPTION (OPTIONAL)", "FAIR MARKET VALUE",
+                 "CATEGORIES (OPTIONAL)"]
+
+      row = ["103", "Short", "Title", "Desc", "100", "CAT"]
+
+      result = ProcessAuctionItems.build_item(row, headers)
+
+      assert Map.has_key?(result, :item_id)
+      assert Map.has_key?(result, :short_title)
+      assert Map.has_key?(result, :title)
+      assert Map.has_key?(result, :description)
+      assert Map.has_key?(result, :fair_market_value)
+      assert Map.has_key?(result, :categories)
+    end
+
+    test "trims whitespace from field values" do
+      headers = ["ITEM ID", "CATEGORIES (OPTIONAL)"]
+      row = ["  103  ", "  HOME  "]
+
+      result = ProcessAuctionItems.build_item(row, headers)
+
+      assert result[:item_id] == "103"
+      assert result[:categories] == "HOME"
+    end
+  end
 end
