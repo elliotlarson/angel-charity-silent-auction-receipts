@@ -1,4 +1,6 @@
 defmodule Receipts.AuctionItem do
+  alias Receipts.TextNormalizer
+
   @derive Jason.Encoder
   @enforce_keys [:item_id, :short_title, :title, :description, :fair_market_value, :categories]
   defstruct [
@@ -26,9 +28,9 @@ defmodule Receipts.AuctionItem do
   def new(attrs) do
     %__MODULE__{
       item_id: parse_integer(attrs[:item_id]),
-      short_title: attrs[:short_title] || "",
-      title: attrs[:title] || "",
-      description: attrs[:description] || "",
+      short_title: TextNormalizer.normalize(attrs[:short_title]),
+      title: TextNormalizer.normalize(attrs[:title]),
+      description: TextNormalizer.normalize(attrs[:description]),
       fair_market_value: parse_integer(attrs[:fair_market_value]),
       categories: attrs[:categories] || "",
       special_instructions: attrs[:special_instructions] || "",
