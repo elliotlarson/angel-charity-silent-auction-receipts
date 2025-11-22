@@ -27,4 +27,5 @@ receipts-*.tar
 
 # AI processing cache
 db/auction_items/cache/
-
+receipts/pdf/*
+receipts/html/*
