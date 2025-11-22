@@ -12,8 +12,8 @@ defmodule Receipts.AuctionItem do
     field :description, :string
     field :fair_market_value, :integer
     field :categories, :string
-    field :special_instructions, :string
-    field :expiration_date, :string
+    field :notes, :string
+    field :expiration_notice, :string
   end
 
   def new(attrs) do
@@ -31,8 +31,8 @@ defmodule Receipts.AuctionItem do
       :description,
       :fair_market_value,
       :categories,
-      :special_instructions,
-      :expiration_date
+      :notes,
+      :expiration_notice
     ])
     |> apply_defaults()
     |> normalize_text_fields()
@@ -53,8 +53,8 @@ defmodule Receipts.AuctionItem do
     |> put_default(:description, "")
     |> put_default(:fair_market_value, 0)
     |> put_default(:categories, "")
-    |> put_default(:special_instructions, "")
-    |> put_default(:expiration_date, "")
+    |> put_default(:notes, "")
+    |> put_default(:expiration_notice, "")
   end
 
   defp put_default(changeset, field, default) do

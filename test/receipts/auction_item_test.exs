@@ -61,7 +61,7 @@ defmodule Receipts.AuctionItemTest do
       assert item.categories == ""
     end
 
-    test "creates auction item with special_instructions and expiration_date" do
+    test "creates auction item with notes and expiration_notice" do
       attrs = %{
         item_id: "123",
         short_title: "Test",
@@ -69,17 +69,17 @@ defmodule Receipts.AuctionItemTest do
         description: "Test description",
         fair_market_value: "100",
         categories: "TEST",
-        special_instructions: "Contact us to book",
-        expiration_date: "12/31/2026"
+        notes: "Contact us to book",
+        expiration_notice: "12/31/2026"
       }
 
       item = AuctionItem.new(attrs)
 
-      assert item.special_instructions == "Contact us to book"
-      assert item.expiration_date == "12/31/2026"
+      assert item.notes == "Contact us to book"
+      assert item.expiration_notice == "12/31/2026"
     end
 
-    test "defaults special_instructions and expiration_date to empty strings" do
+    test "defaults notes and expiration_notice to empty strings" do
       attrs = %{
         item_id: "123",
         short_title: "Test",
@@ -91,8 +91,8 @@ defmodule Receipts.AuctionItemTest do
 
       item = AuctionItem.new(attrs)
 
-      assert item.special_instructions == ""
-      assert item.expiration_date == ""
+      assert item.notes == ""
+      assert item.expiration_notice == ""
     end
   end
 
@@ -170,7 +170,7 @@ defmodule Receipts.AuctionItemTest do
       assert get_change(changeset, :description) == "This is a test. Good stuff!"
     end
 
-    test "sets defaults for special_instructions and expiration_date" do
+    test "sets defaults for notes and expiration_notice" do
       attrs = %{
         item_id: "1",
         short_title: "Test",
@@ -183,8 +183,8 @@ defmodule Receipts.AuctionItemTest do
       changeset = AuctionItem.changeset(attrs)
 
       assert changeset.valid?
-      assert get_change(changeset, :special_instructions) == ""
-      assert get_change(changeset, :expiration_date) == ""
+      assert get_change(changeset, :notes) == ""
+      assert get_change(changeset, :expiration_notice) == ""
     end
 
     test "preserves non-nil values" do
@@ -195,15 +195,15 @@ defmodule Receipts.AuctionItemTest do
         description: "Description",
         fair_market_value: "500",
         categories: "CATEGORY",
-        special_instructions: "Call ahead",
-        expiration_date: "12/31/2026"
+        notes: "Call ahead",
+        expiration_notice: "12/31/2026"
       }
 
       changeset = AuctionItem.changeset(attrs)
 
       assert changeset.valid?
-      assert get_change(changeset, :special_instructions) == "Call ahead"
-      assert get_change(changeset, :expiration_date) == "12/31/2026"
+      assert get_change(changeset, :notes) == "Call ahead"
+      assert get_change(changeset, :expiration_notice) == "12/31/2026"
     end
   end
 
