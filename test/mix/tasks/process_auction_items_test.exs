@@ -31,7 +31,7 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
   end
 
   describe "build_item/2" do
-    test "extracts all required fields from a row" do
+    test "extracts all required fields from a row and converts numeric fields to integers" do
       headers = ["Apply Sales Tax? (Y/N)", "ITEM ID", "15 CHARACTER DESCRIPTION", "",
                  "100 CHARACTER DESCRIPTION", "", "1500 CHARACTER DESCRIPTION (OPTIONAL)",
                  "", "FAIR MARKET VALUE", "ITEM STARTING BID", "MINIMUM BID INCREMENT",
@@ -42,17 +42,15 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
 
       result = ProcessAuctionItems.build_item(row, headers)
 
-      assert Enum.sort(Map.keys(result)) == [:categories, :description, :fair_market_value,
-                                              :item_id, :short_title, :title]
-      assert result[:item_id] == "103"
-      assert result[:categories] == "HOME"
-      assert result[:short_title] == "Landscaping"
-      assert result[:title] == "One Year Monthly Landscaping Services"
-      assert result[:description] == "Enjoy a beautiful yard"
-      assert result[:fair_market_value] == "1200"
+      assert result.item_id == 103
+      assert result.categories == "HOME"
+      assert result.short_title == "Landscaping"
+      assert result.title == "One Year Monthly Landscaping Services"
+      assert result.description == "Enjoy a beautiful yard"
+      assert result.fair_market_value == 1200
     end
 
-    test "uses atom keys for field names" do
+    test "returns AuctionItem struct with typed fields" do
       headers = ["ITEM ID", "15 CHARACTER DESCRIPTION", "100 CHARACTER DESCRIPTION",
                  "1500 CHARACTER DESCRIPTION (OPTIONAL)", "FAIR MARKET VALUE",
                  "CATEGORIES (OPTIONAL)"]
@@ -61,12 +59,13 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
 
       result = ProcessAuctionItems.build_item(row, headers)
 
-      assert Map.has_key?(result, :item_id)
-      assert Map.has_key?(result, :short_title)
-      assert Map.has_key?(result, :title)
-      assert Map.has_key?(result, :description)
-      assert Map.has_key?(result, :fair_market_value)
-      assert Map.has_key?(result, :categories)
+      assert is_struct(result, Receipts.AuctionItem)
+      assert is_integer(result.item_id)
+      assert is_integer(result.fair_market_value)
+      assert is_binary(result.short_title)
+      assert is_binary(result.title)
+      assert is_binary(result.description)
+      assert is_binary(result.categories)
     end
 
     test "trims whitespace from field values" do
@@ -75,8 +74,8 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
 
       result = ProcessAuctionItems.build_item(row, headers)
 
-      assert result[:item_id] == "103"
-      assert result[:categories] == "HOME"
+      assert result.item_id == 103
+      assert result.categories == "HOME"
     end
   end
 
@@ -121,11 +120,12 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
       end)
 
       first_item = Enum.at(decoded, 0)
-      assert first_item[:item_id] == "103"
+      assert first_item[:item_id] == 103
       assert first_item[:categories] == "HOME"
       assert first_item[:short_title] == "Landscaping"
+      assert first_item[:fair_market_value] == 1200
 
-      refute Enum.any?(decoded, fn item -> item[:item_id] == "110" end)
+      refute Enum.any?(decoded, fn item -> item[:item_id] == 110 end)
     end
   end
 end

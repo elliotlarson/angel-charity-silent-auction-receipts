@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.ProcessAuctionItems do
   use Mix.Task
 
+  alias Receipts.AuctionItem
+
   @shortdoc "Process auction items CSV files and convert to JSON"
 
   @csv_dir "db/auction_items/csv"
@@ -104,13 +106,15 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
   @doc false
   def build_item(row, headers) do
-    @field_mappings
-    |> Enum.reduce(%{}, fn {header, field_name}, acc ->
-      case find_header_index(headers, header) do
-        nil -> Map.put(acc, field_name, "")
-        index -> Map.put(acc, field_name, get_column(row, index))
-      end
-    end)
+    attrs = @field_mappings
+      |> Enum.reduce(%{}, fn {header, field_name}, acc ->
+        case find_header_index(headers, header) do
+          nil -> Map.put(acc, field_name, "")
+          index -> Map.put(acc, field_name, get_column(row, index))
+        end
+      end)
+
+    AuctionItem.new(attrs)
   end
 
   defp find_header_index(headers, target_header) do
