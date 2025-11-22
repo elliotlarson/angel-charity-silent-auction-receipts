@@ -121,5 +121,31 @@ defmodule Receipts.HtmlFormatterTest do
       expected = "<h5>INCLUDES:</h5>\n<ul>\n<li>Item 1</li>\n<li>Item 2</li>\n</ul>"
       assert HtmlFormatter.format_description(input) == expected
     end
+
+    test "converts http URLs to links" do
+      input = "Visit http://example.com for more info"
+      expected = "<p>Visit <a href=\"http://example.com\">http://example.com</a> for more info</p>"
+      assert HtmlFormatter.format_description(input) == expected
+    end
+
+    test "converts https URLs to links" do
+      input = "Redeem at https://redeem.travelpledge.com/T42825"
+      expected = "<p>Redeem at <a href=\"https://redeem.travelpledge.com/T42825\">https://redeem.travelpledge.com/T42825</a></p>"
+      assert HtmlFormatter.format_description(input) == expected
+    end
+
+    test "converts multiple URLs to links" do
+      input = "Visit https://example.com or http://another.com"
+      result = HtmlFormatter.format_description(input)
+      assert result =~ "<a href=\"https://example.com\">https://example.com</a>"
+      assert result =~ "<a href=\"http://another.com\">http://another.com</a>"
+    end
+
+    test "converts URLs in bullet lists" do
+      input = "Resources:\n- https://example.com\n- http://test.org"
+      result = HtmlFormatter.format_description(input)
+      assert result =~ "<a href=\"https://example.com\">https://example.com</a>"
+      assert result =~ "<a href=\"http://test.org\">http://test.org</a>"
+    end
   end
 end

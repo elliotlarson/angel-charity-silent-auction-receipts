@@ -10,6 +10,7 @@ defmodule Receipts.HtmlFormatter do
 
   def format_description(text) when is_binary(text) do
     text
+    |> convert_urls_to_links()
     |> String.split(["\n\n", "\r\n\r\n"], trim: true)
     |> Enum.map(&String.trim/1)
     |> Enum.filter(&not_blank?/1)
@@ -93,5 +94,11 @@ defmodule Receipts.HtmlFormatter do
     text
     |> String.split(["\n", "\r\n"], trim: true)
     |> Enum.join("<br>\n")
+  end
+
+  defp convert_urls_to_links(text) do
+    Regex.replace(~r{https?://[^\s<]+}, text, fn url ->
+      "<a href=\"#{url}\">#{url}</a>"
+    end)
   end
 end
