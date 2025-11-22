@@ -2,6 +2,32 @@
 
 Generating silent auction receipts for Angel Charity's 2025 Angel Ball Silent Auction.
 
+## Quick Start Workflow
+
+When you receive a new CSV file from Angel Charity, follow these steps:
+
+1. **Place CSV file** in `db/auction_items/csv/`
+2. **Process CSV to JSON** with AI extraction:
+   ```bash
+   mix process_auction_items
+   ```
+   - Select the CSV file from the list
+   - AI will extract expiration dates and special notes
+   - Output saved to `db/auction_items/json/`
+
+3. **Generate PDF and HTML receipts**:
+   ```bash
+   mix generate_receipts
+   ```
+   - Reads all JSON files from `db/auction_items/json/`
+   - Generates PDFs in `receipts/pdf/`
+   - Generates HTML in `receipts/html/`
+   - Files named: `receipt_<id>_<short_title>.[pdf|html]`
+
+4. **Review outputs**:
+   - Check `receipts/pdf/` for printable PDFs
+   - Check `receipts/html/` for web-viewable versions
+
 ## Processing Auction Items
 
 This project includes a Mix task for converting auction item CSV files to JSON format with AI-powered field extraction.
@@ -78,6 +104,52 @@ Processed item 3/137 (ID: 105)
 ...
 Successfully processed 137 items
 Output saved to: db/auction_items/json/20251121_auction_items.json
+```
+
+## Generating Receipts
+
+After processing the CSV to JSON, generate PDF and HTML receipts:
+
+```bash
+mix generate_receipts
+```
+
+The task will:
+1. Read all JSON files from `db/auction_items/json/`
+2. Generate a PDF receipt for each item in `receipts/pdf/`
+3. Generate an HTML receipt for each item in `receipts/html/`
+4. Display progress for each receipt
+5. Show a summary when complete
+
+### Output Structure
+
+```
+receipts/
+  pdf/
+    receipt_103_landscaping.pdf
+    receipt_104_show_stopper.pdf
+    ...
+  html/
+    receipt_103_landscaping.html
+    receipt_104_show_stopper.html
+    ...
+```
+
+Files are named: `receipt_<item_id>_<short_title_in_snake_case>.[pdf|html]`
+
+### Example
+
+```bash
+$ mix generate_receipts
+Generating receipts...
+Found 137 auction items
+[1/137] Generating receipt for item #103...
+[2/137] Generating receipt for item #104...
+...
+[137/137] Generating receipt for item #240...
+
+Generation complete!
+Successfully generated: 137 receipts
 ```
 
 ## Installation

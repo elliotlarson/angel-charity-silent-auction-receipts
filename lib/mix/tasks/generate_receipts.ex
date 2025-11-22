@@ -1,0 +1,102 @@
+defmodule Mix.Tasks.GenerateReceipts do
+  use Mix.Task
+  alias Receipts.AuctionItem
+  alias Receipts.ReceiptGenerator
+
+  @shortdoc "Generate PDF receipts for all auction items"
+
+  def run(_args) do
+    ensure_chromic_pdf_started()
+
+    json_dir = Application.get_env(:receipts, :json_dir, "db/auction_items/json")
+    pdf_dir = Application.get_env(:receipts, :pdf_dir, "receipts/pdf")
+    html_dir = Application.get_env(:receipts, :html_dir, "receipts/html")
+
+    Mix.shell().info("Generating receipts...")
+
+    File.mkdir_p!(pdf_dir)
+    File.mkdir_p!(html_dir)
+
+    items = load_auction_items(json_dir)
+    total = length(items)
+
+    Mix.shell().info("Found #{total} auction items")
+
+    results =
+      items
+      |> Enum.with_index(1)
+      |> Enum.map(fn {item, index} ->
+        generate_receipt(item, index, total, pdf_dir, html_dir)
+      end)
+
+    successful = Enum.count(results, fn result -> result == :ok end)
+    failed = total - successful
+
+    Mix.shell().info("\nGeneration complete!")
+    Mix.shell().info("Successfully generated: #{successful} receipts")
+
+    if failed > 0 do
+      Mix.shell().error("Failed: #{failed} receipts")
+    end
+  end
+
+  defp load_auction_items(json_dir) do
+    json_dir
+    |> File.ls!()
+    |> Enum.filter(&String.ends_with?(&1, ".json"))
+    |> Enum.flat_map(fn filename ->
+      path = Path.join(json_dir, filename)
+      {:ok, content} = File.read(path)
+      {:ok, items_data} = Jason.decode(content)
+
+      Enum.map(items_data, fn item_data ->
+        AuctionItem.new(item_data)
+      end)
+    end)
+  end
+
+  defp generate_receipt(item, index, total, pdf_dir, html_dir) do
+    snake_case_title = to_snake_case(item.short_title)
+    base_filename = "receipt_#{item.item_id}_#{snake_case_title}"
+    pdf_path = Path.join(pdf_dir, "#{base_filename}.pdf")
+    html_path = Path.join(html_dir, "#{base_filename}.html")
+
+    Mix.shell().info("[#{index}/#{total}] Generating receipt for item ##{item.item_id}...")
+
+    with :ok <- ReceiptGenerator.generate_pdf(item, pdf_path),
+         :ok <- ReceiptGenerator.save_html(item, html_path) do
+      :ok
+    else
+      {:error, reason} ->
+        Mix.shell().error("Failed to generate receipt for item ##{item.item_id}: #{inspect(reason)}")
+        :error
+    end
+  end
+
+  defp to_snake_case(string) do
+    string
+    |> String.downcase()
+    |> String.replace(~r/[^a-z0-9]+/, "_")
+    |> String.trim("_")
+  end
+
+  defp ensure_chromic_pdf_started do
+    Application.ensure_all_started(:chromic_pdf)
+
+    Process.flag(:trap_exit, true)
+
+    case Supervisor.start_link([ChromicPDF], strategy: :one_for_one) do
+      {:ok, _pid} ->
+        Process.flag(:trap_exit, false)
+        :ok
+
+      {:error, {:shutdown, {:failed_to_start_child, ChromicPDF, {:already_started, _}}}} ->
+        Process.flag(:trap_exit, false)
+        :ok
+
+      {:error, reason} ->
+        Process.flag(:trap_exit, false)
+        raise "Failed to start ChromicPDF: #{inspect(reason)}"
+    end
+  end
+end

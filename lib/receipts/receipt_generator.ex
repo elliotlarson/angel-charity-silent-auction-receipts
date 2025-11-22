@@ -11,6 +11,11 @@ defmodule Receipts.ReceiptGenerator do
     ChromicPDF.print_to_pdf({:html, html}, output: output_path)
   end
 
+  def save_html(auction_item, output_path) do
+    html = render_html(auction_item)
+    File.write(output_path, html)
+  end
+
   def render_html(auction_item) do
     template = File.read!(@template_path)
 

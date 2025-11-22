@@ -6,67 +6,118 @@
   <title>Angel Charity - Auction Receipt</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* List styling for description content */
+    .text-gray-800 p {
+      margin-bottom: 1rem !important;
+      line-height: 1.5;
+    }
+
+    .text-gray-800 p:last-child {
+      margin-bottom: 0 !important;
+    }
+
+    .text-gray-800 ul {
+      margin: 1rem 0 !important;
+      padding-left: 1.5rem !important;
+      list-style-type: disc !important;
+      list-style-position: outside !important;
+    }
+
+    .text-gray-800 ul li {
+      margin-bottom: 0.5rem !important;
+      display: list-item !important;
+    }
+
+    .text-gray-800 h5 {
+      margin-top: 1rem !important;
+      margin-bottom: 0.5rem !important;
+      font-weight: 600 !important;
+      font-size: 0.875rem !important;
+      text-transform: uppercase !important;
+    }
+
     @media print {
       body {
-        padding: 0;
+        padding: 0 !important;
       }
       @page {
-        margin: 0.5in;
+        margin: 0.4in;
         size: letter;
+      }
+
+      .text-gray-800 p {
+        margin-bottom: 1rem !important;
+      }
+
+      .text-gray-800 ul {
+        margin: 1rem 0 !important;
+        padding-left: 1.5rem !important;
+        list-style-type: disc !important;
+        list-style-position: outside !important;
+      }
+
+      .text-gray-800 ul li {
+        margin-bottom: 0.5rem !important;
+        display: list-item !important;
+      }
+
+      .text-gray-800 h5 {
+        margin-top: 1rem !important;
+        margin-bottom: 0.5rem !important;
       }
     }
   </style>
 </head>
-<body class="p-8">
-  <div class="max-w-3xl mx-auto p-8">
+<body class="p-4">
+  <div class="max-w-3xl mx-auto p-4">
     <!-- Header Section with Logo -->
-    <div class="mb-6 text-center">
-      <div class="mb-4 flex justify-center">
-        <img src="<%= @logo_path %>" alt="Angel Charity for Children Logo" class="w-32 h-auto">
+    <div class="mb-4 text-center">
+      <div class="mb-2 flex justify-center">
+        <img src="<%= @logo_path %>" alt="Angel Charity for Children Logo" class="w-28 h-auto">
       </div>
 
       <div>
-        <h2 class="text-xl font-semibold">2025 Angel Ball Silent Auction</h2>
-        <p class="text-gray-600">December 13, 2025</p>
+        <h2 class="text-lg font-semibold">2025 Angel Ball Silent Auction</h2>
+        <p class="text-gray-600 text-sm">December 13, 2025</p>
       </div>
     </div>
 
     <!-- Auction Item Details Section -->
-    <div class="mb-6">
-      <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-300">
-        <h3 class="text-lg font-semibold">Auction Item Details</h3>
+    <div class="mb-4">
+      <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-300">
+        <h3 class="text-base font-semibold">Auction Item Details</h3>
         <p class="text-sm text-gray-600 font-normal">Item #<%= @item.item_id %></p>
       </div>
 
-      <div class="mb-4">
-        <h4 class="text-xl font-bold"><%= @item.title %></h4>
+      <div class="mb-3">
+        <h4 class="text-lg font-bold"><%= @item.title %></h4>
       </div>
 
-      <div class="grid grid-cols-2 gap-6">
-        <div>
-          <h5 class="font-semibold text-sm uppercase text-gray-700 mb-1">Description</h5>
-          <div class="text-gray-800 text-sm">
+      <div class="grid grid-cols-3 gap-4">
+        <div class="col-span-2">
+          <h5 class="font-semibold text-xs uppercase text-gray-700 mb-1">Description</h5>
+          <div class="text-gray-800 text-xs leading-tight">
             <%= @item.description %>
           </div>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-3">
           <div>
-            <h5 class="font-semibold text-sm uppercase text-gray-700 mb-1">Fair Market Value</h5>
-            <p class="text-lg font-bold"><%= @formatted_value %></p>
+            <h5 class="font-semibold text-xs uppercase text-gray-700 mb-1">Fair Market Value</h5>
+            <p class="text-base font-bold"><%= @formatted_value %></p>
           </div>
 
           <%= if @item.notes != "" do %>
           <div>
-            <h5 class="font-semibold text-sm uppercase text-gray-700 mb-1">Special Notes</h5>
-            <p class="text-sm text-gray-800"><%= @item.notes %></p>
+            <h5 class="font-semibold text-xs uppercase text-gray-700 mb-1">Special Notes</h5>
+            <p class="text-xs text-gray-800"><%= @item.notes %></p>
           </div>
           <% end %>
 
           <%= if @item.expiration_notice != "" do %>
           <div>
-            <h5 class="font-semibold text-sm uppercase text-gray-700 mb-1">Expiration</h5>
-            <p class="text-sm text-gray-800"><%= @item.expiration_notice %></p>
+            <h5 class="font-semibold text-xs uppercase text-gray-700 mb-1">Expiration</h5>
+            <p class="text-xs text-gray-800"><%= @item.expiration_notice %></p>
           </div>
           <% end %>
         </div>
@@ -74,29 +125,29 @@
     </div>
 
     <!-- Receipt Acknowledgment Section -->
-    <div class="mt-8 pt-6 border-t border-gray-300">
-      <h3 class="text-lg font-semibold mb-4">Receipt Acknowledgment</h3>
+    <div class="mt-6 pt-4 border-t border-gray-300">
+      <h3 class="text-base font-semibold mb-3">Receipt Acknowledgment</h3>
 
-      <div class="grid grid-cols-12 gap-4">
+      <div class="grid grid-cols-12 gap-3">
         <div class="col-span-5">
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Printed Name</label>
-          <div class="border-b border-gray-300 pb-1" style="min-height: 40px;"></div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Printed Name</label>
+          <div class="border-b border-gray-300 pb-1" style="min-height: 32px;"></div>
         </div>
 
         <div class="col-span-5">
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Signature</label>
-          <div class="border-b border-gray-300 pb-1" style="min-height: 40px;"></div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Signature</label>
+          <div class="border-b border-gray-300 pb-1" style="min-height: 32px;"></div>
         </div>
 
         <div class="col-span-2">
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Date</label>
-          <div class="border-b border-gray-300 pb-1" style="min-height: 40px;"></div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Date</label>
+          <div class="border-b border-gray-300 pb-1" style="min-height: 32px;"></div>
         </div>
       </div>
 
-      <div class="mt-8 text-center text-sm text-gray-600">
+      <div class="mt-4 text-center text-xs text-gray-600">
         <p>Thank you for supporting Angel Charity for Children!</p>
-        <p class="mt-2 text-xs">3132 N. Swan Rd., Tucson, Arizona 85712</p>
+        <p class="mt-1 text-xs">3132 N. Swan Rd., Tucson, Arizona 85712</p>
         <p class="text-xs">520-326-3686 | info@AngelCharity.org</p>
       </div>
     </div>

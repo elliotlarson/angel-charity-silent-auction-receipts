@@ -9,13 +9,22 @@ defmodule Receipts.HtmlFormatter do
   def format_description(""), do: ""
 
   def format_description(text) when is_binary(text) do
-    text
-    |> convert_urls_to_links()
-    |> String.split(["\n\n", "\r\n\r\n"], trim: true)
-    |> Enum.map(&String.trim/1)
-    |> Enum.filter(&not_blank?/1)
-    |> Enum.map(&format_block/1)
-    |> Enum.join("\n")
+    # If text already contains HTML tags, return it as-is (but remove newlines)
+    if already_formatted?(text) do
+      String.replace(text, "\n", "")
+    else
+      text
+      |> convert_urls_to_links()
+      |> String.split(["\n\n", "\r\n\r\n"], trim: true)
+      |> Enum.map(&String.trim/1)
+      |> Enum.filter(&not_blank?/1)
+      |> Enum.map(&format_block/1)
+      |> Enum.join("\n")
+    end
+  end
+
+  defp already_formatted?(text) do
+    String.contains?(text, "<p>") or String.contains?(text, "<ul>") or String.contains?(text, "<h")
   end
 
   defp not_blank?("\r\n" <> rest), do: not_blank?(rest)
