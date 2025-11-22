@@ -36,6 +36,7 @@ defmodule Receipts.AuctionItem do
       :expiration_notice
     ])
     |> apply_defaults()
+    |> ensure_non_negative_integers()
     |> normalize_text_fields()
   end
 
@@ -68,6 +69,12 @@ defmodule Receipts.AuctionItem do
     else
       changeset
     end
+  end
+
+  defp ensure_non_negative_integers(changeset) do
+    changeset
+    |> update_change(:item_id, &max(&1, 0))
+    |> update_change(:fair_market_value, &max(&1, 0))
   end
 
   defp normalize_text_fields(changeset) do

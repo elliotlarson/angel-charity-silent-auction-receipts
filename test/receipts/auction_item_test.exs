@@ -321,4 +321,52 @@ defmodule Receipts.AuctionItemTest do
       assert item.description == "<p>This is already clean. No issues here!</p>"
     end
   end
+
+  describe "ensure_non_negative_integers/1" do
+    test "converts negative fair_market_value to 0" do
+      attrs = %{
+        item_id: "130",
+        short_title: "Test",
+        title: "Test",
+        description: "Test",
+        fair_market_value: "-1",
+        categories: "TEST"
+      }
+
+      item = AuctionItem.new(attrs)
+
+      assert item.fair_market_value == 0
+    end
+
+    test "converts negative item_id to 0" do
+      attrs = %{
+        item_id: "-5",
+        short_title: "Test",
+        title: "Test",
+        description: "Test",
+        fair_market_value: "100",
+        categories: "TEST"
+      }
+
+      item = AuctionItem.new(attrs)
+
+      assert item.item_id == 0
+    end
+
+    test "preserves positive values" do
+      attrs = %{
+        item_id: "123",
+        short_title: "Test",
+        title: "Test",
+        description: "Test",
+        fair_market_value: "500",
+        categories: "TEST"
+      }
+
+      item = AuctionItem.new(attrs)
+
+      assert item.item_id == 123
+      assert item.fair_market_value == 500
+    end
+  end
 end
