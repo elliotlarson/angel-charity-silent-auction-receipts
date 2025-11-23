@@ -6,7 +6,7 @@ Generating silent auction receipts for Angel Charity's 2025 Angel Ball Silent Au
 
 When you receive a new CSV file from Angel Charity, follow these steps:
 
-1. **Place CSV file** in `db/auction_items/csv/`
+1. **Place CSV file** in `db/auction_items_source_data/`
 2. **Process CSV to database** with AI extraction:
 
    ```bash

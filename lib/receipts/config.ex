@@ -5,10 +5,10 @@ defmodule Receipts.Config do
   """
 
   @doc "Directory containing CSV input files"
-  def csv_dir, do: get_env(:csv_dir, "db/auction_items/csv")
+  def csv_dir, do: get_env(:csv_dir, "db/auction_items_source_data")
 
-  @doc "Directory containing JSON output files"
-  def json_dir, do: get_env(:json_dir, "db/auction_items/json")
+  @doc "Directory containing JSON output files (deprecated)"
+  def json_dir, do: get_env(:json_dir, "db/auction_items_source_data")
 
   @doc "Directory for generated PDF receipts"
   def pdf_dir, do: get_env(:pdf_dir, "receipts/pdf")
@@ -17,7 +17,7 @@ defmodule Receipts.Config do
   def html_dir, do: get_env(:html_dir, "receipts/html")
 
   @doc "Directory for AI processing cache"
-  def cache_dir, do: get_env(:cache_dir, "db/auction_items/cache")
+  def cache_dir, do: get_env(:cache_dir, "db/auction_items_source_data/cache")
 
   @doc "Path to receipt HTML template"
   def template_path, do: get_env(:template_path, "priv/templates/receipt.html.eex")

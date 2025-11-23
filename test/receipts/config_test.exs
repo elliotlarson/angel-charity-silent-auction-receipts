@@ -5,11 +5,11 @@ defmodule Receipts.ConfigTest do
 
   describe "default configuration" do
     test "csv_dir returns default path" do
-      assert Config.csv_dir() == "db/auction_items/csv"
+      assert Config.csv_dir() == "db/auction_items_source_data"
     end
 
     test "json_dir returns default path" do
-      assert Config.json_dir() == "db/auction_items/json"
+      assert Config.json_dir() == "db/auction_items_source_data"
     end
 
     test "pdf_dir returns default path" do
@@ -21,7 +21,7 @@ defmodule Receipts.ConfigTest do
     end
 
     test "cache_dir returns default path" do
-      assert Config.cache_dir() == "db/auction_items/cache"
+      assert Config.cache_dir() == "db/auction_items_source_data/cache"
     end
 
     test "template_path returns default path" do
