@@ -28,7 +28,7 @@ defmodule Mix.Tasks.RegenerateReceiptTest do
     Application.put_env(:receipts, :pdf_dir, @test_pdf_dir)
 
     on_exit(fn ->
-      File.rm_rf!("test/tmp/receipts")
+      File.rm_rf!("test/tmp")
 
       if original_html_dir do
         Application.put_env(:receipts, :html_dir, original_html_dir)

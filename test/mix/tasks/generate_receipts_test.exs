@@ -40,8 +40,7 @@ defmodule Mix.Tasks.GenerateReceiptsTest do
     Application.put_env(:receipts, :html_dir, @test_html_dir)
 
     on_exit(fn ->
-      File.rm_rf!(@test_json_dir)
-      File.rm_rf!("test/tmp/receipts")
+      File.rm_rf!("test/tmp")
 
       if original_json_dir do
         Application.put_env(:receipts, :json_dir, original_json_dir)
