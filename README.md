@@ -167,31 +167,36 @@ Generation complete!
 Successfully generated: 137 receipts
 ```
 
-### Manually Editing and Regenerating a Receipt
+### Regenerating Individual Receipts
 
-If a receipt is too long and spills onto a second page, you can manually edit the HTML and regenerate just that PDF:
+After generating receipts, you can regenerate individual items:
 
-1. **Edit the HTML file** in `receipts/html/receipt_<id>_<title>.html`
-   - Reduce font sizes, adjust spacing, or shorten text as needed
-   - The HTML uses Tailwind CSS classes for styling
+**Regenerate from database (fresh HTML + PDF):**
+```bash
+mix generate_receipt <item_id>
+```
 
-2. **Regenerate the PDF** from the edited HTML:
-   ```bash
-   mix regenerate_receipt <item_id>
-   ```
+This reads the current data from the database and generates fresh HTML and PDF files. Useful when you've updated an item's data in the database.
 
-**Example:**
+**Regenerate PDF from edited HTML:**
+```bash
+mix regenerate_receipt_pdf <item_id>
+```
+
+This regenerates only the PDF from an existing HTML file. Useful when you've manually edited the HTML to adjust layout or formatting.
+
+**Example workflow for manual HTML editing:**
 
 ```bash
-# Edit receipts/html/receipt_120_belize.html manually
-# Then regenerate just that PDF:
-$ mix regenerate_receipt 120
+# 1. Edit the HTML file to fix layout
+vim receipts/html/receipt_120_belize.html
+
+# 2. Regenerate just the PDF from edited HTML
+$ mix regenerate_receipt_pdf 120
 Reading HTML from: receipts/html/receipt_120_belize.html
 Generating PDF to: receipts/pdf/receipt_120_belize.pdf
 ✓ Successfully regenerated PDF for item #120
 ```
-
-This regenerates only the specified receipt's PDF without affecting any others.
 
 ## Development
 

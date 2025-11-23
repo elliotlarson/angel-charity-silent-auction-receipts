@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.RegenerateReceipt do
+defmodule Mix.Tasks.RegenerateReceiptPdf do
   use Mix.Task
   alias Receipts.ChromicPDFHelper
   alias Receipts.Config
@@ -10,11 +10,11 @@ defmodule Mix.Tasks.RegenerateReceipt do
 
   ## Usage
 
-      mix regenerate_receipt <item_id>
+      mix regenerate_receipt_pdf <item_id>
 
   ## Example
 
-      mix regenerate_receipt 120
+      mix regenerate_receipt_pdf 120
 
   This will:
   1. Find the HTML file for item #120 in receipts/html/
@@ -28,8 +28,8 @@ defmodule Mix.Tasks.RegenerateReceipt do
 
   def run([]) do
     Mix.shell().error("Error: Item ID required")
-    Mix.shell().info("Usage: mix regenerate_receipt <item_id>")
-    Mix.shell().info("Example: mix regenerate_receipt 120")
+    Mix.shell().info("Usage: mix regenerate_receipt_pdf <item_id>")
+    Mix.shell().info("Example: mix regenerate_receipt_pdf 120")
     exit({:shutdown, 1})
   end
 

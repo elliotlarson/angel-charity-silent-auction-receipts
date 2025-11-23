@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.RegenerateReceiptTest do
+defmodule Mix.Tasks.RegenerateReceiptPdfPdfTest do
   use ExUnit.Case
   import ExUnit.CaptureIO
 
@@ -48,7 +48,7 @@ defmodule Mix.Tasks.RegenerateReceiptTest do
 
   test "regenerates PDF from HTML file" do
     output = capture_io(fn ->
-      Mix.Tasks.RegenerateReceipt.run(["999"])
+      Mix.Tasks.RegenerateReceiptPdf.run(["999"])
     end)
 
     assert output =~ "Reading HTML from:"
@@ -66,7 +66,7 @@ defmodule Mix.Tasks.RegenerateReceiptTest do
     try do
       capture_io(:stderr, fn ->
         capture_io(fn ->
-          Mix.Tasks.RegenerateReceipt.run(["888"])
+          Mix.Tasks.RegenerateReceiptPdf.run(["888"])
         end)
       end)
     catch
@@ -81,7 +81,7 @@ defmodule Mix.Tasks.RegenerateReceiptTest do
     try do
       capture_io(:stderr, fn ->
         capture_io(fn ->
-          Mix.Tasks.RegenerateReceipt.run([])
+          Mix.Tasks.RegenerateReceiptPdf.run([])
         end)
       end)
     catch

@@ -63,9 +63,10 @@ Each implementation step should be presented for approval before committing.
 Mix tasks for this project follow the pattern `mix task_name` and are used for processing auction item data:
 
 - `mix process_auction_items` - Process CSV files and save to database with change detection
-- `mix generate_receipts` - Generate PDF and HTML receipts from database
+- `mix generate_receipts` - Generate PDF and HTML receipts for all items from database
+- `mix generate_receipt <item_id>` - Generate fresh HTML and PDF for one item from database
+- `mix regenerate_receipt_pdf <item_id>` - Regenerate PDF from existing edited HTML
 - `mix migrate_json_to_db` - One-time migration from JSON files to database
-- `mix regenerate_receipt <item_id>` - Regenerate a single receipt from edited HTML
 
 ### Database
 
