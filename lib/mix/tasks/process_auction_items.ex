@@ -2,6 +2,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   use Mix.Task
 
   alias Receipts.AuctionItem
+  alias Receipts.AIDescriptionProcessor
   alias Receipts.Config
 
   @shortdoc "Process auction items CSV files and convert to JSON"
@@ -146,8 +147,6 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
   @doc false
   def build_item(row, headers, opts \\ []) do
-    alias Receipts.AIDescriptionProcessor
-
     attrs =
       @field_mappings
       |> Enum.reduce(%{}, fn {header, field_name}, acc ->
