@@ -7,7 +7,7 @@ Generating silent auction receipts for Angel Charity's 2025 Angel Ball Silent Au
 When you receive a new CSV file from Angel Charity, follow these steps:
 
 1. **Place CSV file** in `db/auction_items/csv/`
-2. **Process CSV to JSON** with AI extraction:
+2. **Process CSV to database** with AI extraction:
 
    ```bash
    mix process_auction_items
@@ -15,7 +15,8 @@ When you receive a new CSV file from Angel Charity, follow these steps:
 
    - Select the CSV file from the list
    - AI will extract expiration dates and special notes
-   - Output saved to `db/auction_items/json/`
+   - Changes detected automatically (unchanged items skipped)
+   - Data saved to SQLite database
 
 3. **Generate PDF and HTML receipts**:
 
@@ -23,7 +24,7 @@ When you receive a new CSV file from Angel Charity, follow these steps:
    mix generate_receipts
    ```
 
-   - Select the JSON file from the list
+   - Reads all items from database
    - Generates PDFs in `receipts/pdf/`
    - Generates HTML in `receipts/html/`
    - Files named: `receipt_<id>_<short_title>.[pdf|html]`
@@ -34,7 +35,7 @@ When you receive a new CSV file from Angel Charity, follow these steps:
 
 ## Processing Auction Items
 
-This project includes a Mix task for converting auction item CSV files to JSON format with AI-powered field extraction.
+This project includes a Mix task for processing auction item CSV files and storing them in a SQLite database with AI-powered field extraction and intelligent change detection.
 
 ### Setup
 
@@ -61,12 +62,14 @@ The task will:
 1. Display a list of available CSV files in `db/auction_items/csv/`
 2. Prompt you to select a file by number
 3. Process the CSV file:
-   - Remove empty lines
+   - Compute SHA256 hash of each CSV row for change detection
+   - Check database for existing items
+   - Skip unchanged items (saves AI processing time and cost)
+   - Process new or changed items with AI extraction
    - Filter out placeholder rows (items with zero or empty ID or Fair Market Value)
-   - Extract relevant fields from the CSV
    - **Use AI to extract expiration dates and special notes from descriptions**
    - Show progress for each item processed
-4. Save the processed data as JSON in `db/auction_items/json/`
+4. Save the processed data to SQLite database in `db/receipts_dev.db`
 
 ### AI Processing
 
@@ -103,18 +106,24 @@ $ mix process_auction_items
 Available CSV files:
   1. 20251121_auction_items.csv
 Select file number: 1
-AI processing enabled - this may take a few minutes...
-Processed item 1/137 (ID: 103)
-Processed item 2/137 (ID: 104)
-Processed item 3/137 (ID: 105)
+Processing 20251121_auction_items.csv...
+[1/137] Created item #103
+[2/137] Created item #104
+[3/137] Skipped item #105 (unchanged)
 ...
-Successfully processed 137 items
-Output saved to: db/auction_items/json/20251121_auction_items.json
+
+Summary:
+  New items: 5
+  Updated items: 2
+  Skipped (unchanged): 130
+
+Processing complete!
+Total items in database: 137
 ```
 
 ## Generating Receipts
 
-After processing the CSV to JSON, generate PDF and HTML receipts:
+After processing the CSV to the database, generate PDF and HTML receipts:
 
 ```bash
 mix generate_receipts
@@ -122,12 +131,11 @@ mix generate_receipts
 
 The task will:
 
-1. Display a list of available JSON files in `db/auction_items/json/`
-2. Prompt you to select a file by number
-3. Generate a PDF receipt for each item in `receipts/pdf/`
-4. Generate an HTML receipt for each item in `receipts/html/`
-5. Display progress for each receipt
-6. Show a summary when complete
+1. Read all auction items from the database
+2. Generate a PDF receipt for each item in `receipts/pdf/`
+3. Generate an HTML receipt for each item in `receipts/html/`
+4. Display progress for each receipt
+5. Show a summary when complete
 
 ### Output Structure
 
@@ -149,12 +157,7 @@ Files are named: `receipt_<item_id>_<short_title_in_snake_case>.[pdf|html]`
 
 ```bash
 $ mix generate_receipts
-Available JSON files:
-  1. 20251121_auction_items.json
-  2. 20251123_auction_items.json
-Select file number: 2
-Generating receipts from 20251123_auction_items.json...
-Found 137 auction items
+Generating receipts for 137 auction items...
 [1/137] Generating receipt for item #103...
 [2/137] Generating receipt for item #104...
 ...

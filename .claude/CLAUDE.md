@@ -34,9 +34,14 @@ This is an Elixir project called "Receipts" for processing auction item data fro
 
 - `lib/` - Application code
 - `test/` - Test files (\*.exs)
-- `db/auction_items/` - Data directory containing CSV and JSON files
-  - `csv/` - Source CSV files with auction item data
-  - `json/` - Processed JSON output files
+- `db/` - Data directory
+  - `auction_items/csv/` - Source CSV files with auction item data
+  - `auction_items/cache/` - AI processing cache (SHA256-named JSON files)
+  - `receipts_dev.db` - SQLite database (source of truth for auction items)
+  - `receipts_test.db` - SQLite test database
+- `receipts/` - Generated output files
+  - `pdf/` - Generated PDF receipts
+  - `html/` - Generated HTML receipts
 - `stories/` - fais story management directories
   - `01_backlog/` - Stories not yet started
   - `02_working/` - Stories in progress
@@ -55,7 +60,21 @@ Each implementation step should be presented for approval before committing.
 
 ### Mix Tasks
 
-Mix tasks for this project follow the pattern `mix task_name` and are used for processing auction item data (CSV to JSON conversion, data cleaning, field extraction).
+Mix tasks for this project follow the pattern `mix task_name` and are used for processing auction item data:
+
+- `mix process_auction_items` - Process CSV files and save to database with change detection
+- `mix generate_receipts` - Generate PDF and HTML receipts from database
+- `mix migrate_json_to_db` - One-time migration from JSON files to database
+- `mix regenerate_receipt <item_id>` - Regenerate a single receipt from edited HTML
+
+### Database
+
+The project uses Ecto with SQLite3 for data persistence:
+
+- `Receipts.Repo` - Ecto repository for database access
+- `Receipts.AuctionItem` - Schema for auction items with change detection fields
+- Change detection via SHA256 hashing of CSV rows
+- Migrations in `priv/repo/migrations/`
 
 ## Elixir Version
 

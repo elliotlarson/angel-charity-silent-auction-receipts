@@ -25,7 +25,14 @@ receipts-*.tar
 # Environment variables
 .env
 
+# Database files
+*.db
+*.db-*
+
 # AI processing cache
 db/auction_items/cache/
 receipts/pdf/*
 receipts/html/*
+
+# Deprecated - using database now
+db/auction_items/json/
