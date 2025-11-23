@@ -5,6 +5,8 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   alias Receipts.AIDescriptionProcessor
   alias Receipts.Config
 
+  NimbleCSV.define(CSVParser, separator: ",", escape: "\"")
+
   @shortdoc "Process auction items CSV files and convert to JSON"
 
   @field_mappings %{
@@ -104,7 +106,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   def read_and_parse_csv(path) do
     path
     |> File.stream!()
-    |> Mix.Tasks.ProcessAuctionItems.CSV.decode()
+    |> CSVParser.parse_stream()
     |> Enum.to_list()
   end
 
