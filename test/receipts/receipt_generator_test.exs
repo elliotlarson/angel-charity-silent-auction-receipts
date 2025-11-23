@@ -3,7 +3,7 @@ defmodule Receipts.ReceiptGeneratorTest do
   alias Receipts.ReceiptGenerator
   alias Receipts.AuctionItem
 
-  defp test_item_attrs(overrides \\ %{}) do
+  defp test_item_attrs(overrides) do
     Map.merge(
       %{
         csv_row_hash: "test_hash",

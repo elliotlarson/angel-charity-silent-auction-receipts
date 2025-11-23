@@ -4,7 +4,7 @@ defmodule Receipts.AuctionItemTest do
 
   alias Receipts.AuctionItem
 
-  defp sample_attrs(overrides \\ %{}) do
+  defp sample_attrs(overrides) do
     Map.merge(
       %{
         csv_row_hash: "abc123",

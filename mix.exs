@@ -7,7 +7,9 @@ defmodule Receipts.MixProject do
       version: "0.1.0",
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      test_pattern: "*_test.exs",
+      test_coverage: [ignore_modules: []]
     ]
   end
 
