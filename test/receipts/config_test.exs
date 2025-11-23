@@ -1,0 +1,56 @@
+defmodule Receipts.ConfigTest do
+  use ExUnit.Case
+
+  alias Receipts.Config
+
+  describe "default configuration" do
+    test "csv_dir returns default path" do
+      assert Config.csv_dir() == "db/auction_items/csv"
+    end
+
+    test "json_dir returns default path" do
+      assert Config.json_dir() == "db/auction_items/json"
+    end
+
+    test "pdf_dir returns default path" do
+      assert Config.pdf_dir() == "receipts/pdf"
+    end
+
+    test "html_dir returns default path" do
+      assert Config.html_dir() == "receipts/html"
+    end
+
+    test "cache_dir returns default path" do
+      assert Config.cache_dir() == "db/auction_items/cache"
+    end
+
+    test "template_path returns default path" do
+      assert Config.template_path() == "priv/templates/receipt.html.eex"
+    end
+
+    test "logo_path returns default path" do
+      assert Config.logo_path() == "priv/static/angel_charity_logo.svg"
+    end
+  end
+
+  describe "configuration override" do
+    setup do
+      original = Application.get_env(:receipts, :csv_dir)
+
+      on_exit(fn ->
+        if original do
+          Application.put_env(:receipts, :csv_dir, original)
+        else
+          Application.delete_env(:receipts, :csv_dir)
+        end
+      end)
+
+      :ok
+    end
+
+    test "respects application environment config" do
+      Application.put_env(:receipts, :csv_dir, "custom/csv/path")
+      assert Config.csv_dir() == "custom/csv/path"
+    end
+  end
+end

@@ -1,6 +1,7 @@
 defmodule Mix.Tasks.RegenerateReceipt do
   use Mix.Task
   alias Receipts.ChromicPDFHelper
+  alias Receipts.Config
 
   @shortdoc "Regenerate a PDF receipt from an edited HTML file"
 
@@ -46,8 +47,8 @@ defmodule Mix.Tasks.RegenerateReceipt do
   end
 
   defp regenerate_receipt(item_id) do
-    html_dir = Application.get_env(:receipts, :html_dir, "receipts/html")
-    pdf_dir = Application.get_env(:receipts, :pdf_dir, "receipts/pdf")
+    html_dir = Config.html_dir()
+    pdf_dir = Config.pdf_dir()
 
     # Find HTML file for this item_id
     html_files = Path.wildcard(Path.join(html_dir, "receipt_#{item_id}_*.html"))

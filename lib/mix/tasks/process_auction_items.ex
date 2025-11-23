@@ -2,11 +2,9 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   use Mix.Task
 
   alias Receipts.AuctionItem
+  alias Receipts.Config
 
   @shortdoc "Process auction items CSV files and convert to JSON"
-
-  @csv_dir "db/auction_items/csv"
-  @json_dir "db/auction_items/json"
 
   @field_mappings %{
     "ITEM ID" => :item_id,
@@ -37,7 +35,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
     case csv_files do
       [] ->
-        Mix.shell().error("No CSV files found in #{@csv_dir}")
+        Mix.shell().error("No CSV files found in #{Config.csv_dir()}")
 
       files ->
         selected_file = prompt_file_selection(files)
@@ -46,7 +44,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   end
 
   defp list_csv_files do
-    case File.ls(@csv_dir) do
+    case File.ls(Config.csv_dir()) do
       {:ok, files} ->
         files
         |> Enum.filter(&String.ends_with?(&1, ".csv"))
@@ -79,9 +77,9 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   end
 
   defp process_file(filename, opts) do
-    csv_path = Path.join(@csv_dir, filename)
+    csv_path = Path.join(Config.csv_dir(), filename)
     json_filename = Path.basename(filename, ".csv") <> ".json"
-    json_path = Path.join(@json_dir, json_filename)
+    json_path = Path.join(Config.json_dir(), json_filename)
 
     skip_ai = Keyword.get(opts, :skip_ai_processing, false)
 

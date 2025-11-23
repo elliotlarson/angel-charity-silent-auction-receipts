@@ -3,8 +3,7 @@ defmodule Receipts.ReceiptGenerator do
   Generates PDF receipts for auction items using ChromicPDF.
   """
 
-  @template_path "priv/templates/receipt.html.eex"
-  @logo_path "priv/static/angel_charity_logo.svg"
+  alias Receipts.Config
 
   def generate_pdf(auction_item, output_path) do
     html = render_html(auction_item)
@@ -17,7 +16,7 @@ defmodule Receipts.ReceiptGenerator do
   end
 
   def render_html(auction_item) do
-    template = File.read!(@template_path)
+    template = File.read!(Config.template_path())
 
     assigns = %{
       item: auction_item,
@@ -29,7 +28,7 @@ defmodule Receipts.ReceiptGenerator do
   end
 
   defp get_logo_data_uri do
-    logo_content = File.read!(@logo_path)
+    logo_content = File.read!(Config.logo_path())
     encoded = Base.encode64(logo_content)
     "data:image/svg+xml;base64,#{encoded}"
   end

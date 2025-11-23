@@ -3,15 +3,16 @@ defmodule Mix.Tasks.GenerateReceipts do
   alias Receipts.AuctionItem
   alias Receipts.ReceiptGenerator
   alias Receipts.ChromicPDFHelper
+  alias Receipts.Config
 
   @shortdoc "Generate PDF receipts for all auction items"
 
   def run(_args) do
     ChromicPDFHelper.ensure_started()
 
-    json_dir = Application.get_env(:receipts, :json_dir, "db/auction_items/json")
-    pdf_dir = Application.get_env(:receipts, :pdf_dir, "receipts/pdf")
-    html_dir = Application.get_env(:receipts, :html_dir, "receipts/html")
+    json_dir = Config.json_dir()
+    pdf_dir = Config.pdf_dir()
+    html_dir = Config.html_dir()
 
     Mix.shell().info("Generating receipts...")
 

@@ -4,11 +4,11 @@ defmodule Receipts.ProcessingCache do
   Cache is keyed by description hash.
   """
 
-  @cache_dir "db/auction_items/cache"
+  alias Receipts.Config
 
   def get(description) do
     cache_key = hash_description(description)
-    cache_path = Path.join(@cache_dir, "#{cache_key}.json")
+    cache_path = Path.join(Config.cache_dir(), "#{cache_key}.json")
 
     case File.read(cache_path) do
       {:ok, content} -> Jason.decode(content, keys: :atoms)
@@ -18,9 +18,9 @@ defmodule Receipts.ProcessingCache do
 
   def put(description, result) do
     cache_key = hash_description(description)
-    cache_path = Path.join(@cache_dir, "#{cache_key}.json")
+    cache_path = Path.join(Config.cache_dir(), "#{cache_key}.json")
 
-    File.mkdir_p!(@cache_dir)
+    File.mkdir_p!(Config.cache_dir())
     File.write!(cache_path, Jason.encode!(result))
   end
 
