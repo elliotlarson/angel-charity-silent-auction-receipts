@@ -1,0 +1,11 @@
+{
+  "status": 401,
+  "body": {
+    "error": {
+      "message": "invalid x-api-key",
+      "type": "authentication_error"
+    },
+    "request_id": "req_011CVR3jQa1A9ebWZt5LeF7N",
+    "type": "error"
+  }
+}

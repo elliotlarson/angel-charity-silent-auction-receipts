@@ -14,6 +14,7 @@ defmodule Receipts.AnthropicClient do
   ## Options
     * `:model` - The Claude model to use (default: #{@default_model})
     * `:max_tokens` - Maximum tokens in response (default: 1024)
+    * `:http_client` - HTTP client function for testing (default: uses Req)
 
   ## Returns
     * `{:ok, response_text}` - On success
@@ -27,11 +28,12 @@ defmodule Receipts.AnthropicClient do
     else
       model = Keyword.get(opts, :model, @default_model)
       max_tokens = Keyword.get(opts, :max_tokens, 1024)
-      make_request(prompt, api_key, model, max_tokens)
+      http_client = Keyword.get(opts, :http_client, &Req.post/2)
+      make_request(prompt, api_key, model, max_tokens, http_client)
     end
   end
 
-  defp make_request(prompt, api_key, model, max_tokens) do
+  defp make_request(prompt, api_key, model, max_tokens, http_client) do
     request_body = %{
       model: model,
       max_tokens: max_tokens,
@@ -43,18 +45,18 @@ defmodule Receipts.AnthropicClient do
       ]
     }
 
-    response =
-      Req.post!(
-        "#{@api_base_url}/messages",
-        json: request_body,
-        headers: [
-          {"x-api-key", api_key},
-          {"anthropic-version", @api_version},
-          {"content-type", "application/json"}
-        ]
-      )
-
-    parse_response(response)
+    case http_client.(
+           "#{@api_base_url}/messages",
+           json: request_body,
+           headers: [
+             {"x-api-key", api_key},
+             {"anthropic-version", @api_version},
+             {"content-type", "application/json"}
+           ]
+         ) do
+      {:ok, response} -> parse_response(response)
+      {:error, reason} -> {:error, {:network_error, reason}}
+    end
   end
 
   defp parse_response(%{status: 200, body: body}) do

@@ -1,0 +1,28 @@
+{
+  "status": 200,
+  "body": {
+    "content": [
+      {
+        "text": "Hello! How can I help you today?",
+        "type": "text"
+      }
+    ],
+    "id": "msg_01YXgzxa2L6NepBfLoP1ZEF6",
+    "model": "claude-sonnet-4-5-20250929",
+    "role": "assistant",
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "input_tokens": 9,
+      "output_tokens": 12,
+      "service_tier": "standard"
+    }
+  }
+}

@@ -184,3 +184,31 @@ Generating PDF to: receipts/pdf/receipt_120_belize.pdf
 ```
 
 This regenerates only the specified receipt's PDF without affecting any others.
+
+## Development
+
+### Running Tests
+
+```bash
+# Run all tests
+mix test
+
+# Run specific test file
+mix test test/receipts/anthropic_client_test.exs
+```
+
+### Updating API Test Fixtures
+
+The test suite uses real API response fixtures to avoid making live API calls during tests. If the Anthropic API format changes, you can re-capture the fixtures:
+
+```bash
+mix run scripts/capture_api_responses.exs
+```
+
+This script:
+- Makes real API calls to Anthropic (requires `ANTHROPIC_API_KEY` in `.env`)
+- Captures successful and error responses
+- Saves them as fixtures in `test/fixtures/`
+- Allows tests to run offline with real API response structures
+
+The fixtures are used by the test suite to ensure tests are fast, reliable, and don't require an API key.
