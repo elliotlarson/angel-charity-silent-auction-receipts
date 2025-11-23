@@ -5,8 +5,7 @@ defmodule Receipts.AuctionItem do
   alias Receipts.HtmlFormatter
 
   @derive Jason.Encoder
-  @primary_key false
-  embedded_schema do
+  schema "auction_items" do
     field :item_id, :integer
     field :short_title, :string
     field :title, :string
@@ -15,6 +14,10 @@ defmodule Receipts.AuctionItem do
     field :categories, :string
     field :notes, :string
     field :expiration_notice, :string
+    field :csv_row_hash, :string
+    field :csv_raw_line, :string
+
+    timestamps(type: :utc_datetime)
   end
 
   def new(attrs) do
@@ -33,9 +36,13 @@ defmodule Receipts.AuctionItem do
       :fair_market_value,
       :categories,
       :notes,
-      :expiration_notice
+      :expiration_notice,
+      :csv_row_hash,
+      :csv_raw_line
     ])
     |> apply_defaults()
+    |> validate_required([:csv_row_hash, :csv_raw_line])
+    |> unique_constraint(:item_id)
     |> ensure_non_negative_integers()
     |> normalize_text_fields()
   end

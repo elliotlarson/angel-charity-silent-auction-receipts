@@ -1,19 +1,30 @@
 defmodule Receipts.AuctionItemTest do
-  use ExUnit.Case
+  use Receipts.DataCase
   import Ecto.Changeset, only: [get_change: 2]
 
   alias Receipts.AuctionItem
 
+  defp sample_attrs(overrides \\ %{}) do
+    Map.merge(
+      %{
+        csv_row_hash: "abc123",
+        csv_raw_line: "103,HOME,Landscaping,One Year Monthly Landscaping Services,..."
+      },
+      overrides
+    )
+  end
+
   describe "new/1" do
     test "creates struct with integer fields for item_id and fair_market_value" do
-      attrs = %{
-        item_id: "103",
-        short_title: "Landscaping",
-        title: "One Year Monthly Landscaping Services",
-        description: "Enjoy a beautiful yard",
-        fair_market_value: "1200",
-        categories: "HOME"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "103",
+          short_title: "Landscaping",
+          title: "One Year Monthly Landscaping Services",
+          description: "Enjoy a beautiful yard",
+          fair_market_value: "1200",
+          categories: "HOME"
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -26,14 +37,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "handles empty strings for numeric fields" do
-      attrs = %{
-        item_id: "",
-        short_title: "Test",
-        title: "Test Title",
-        description: "Test Desc",
-        fair_market_value: "",
-        categories: "TEST"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "",
+          short_title: "Test",
+          title: "Test Title",
+          description: "Test Desc",
+          fair_market_value: "",
+          categories: "TEST"
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -42,14 +54,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "handles nil values gracefully" do
-      attrs = %{
-        item_id: "103",
-        short_title: nil,
-        title: nil,
-        description: nil,
-        fair_market_value: "1200",
-        categories: nil
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "103",
+          short_title: nil,
+          title: nil,
+          description: nil,
+          fair_market_value: "1200",
+          categories: nil
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -62,16 +75,17 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "creates auction item with notes and expiration_notice" do
-      attrs = %{
-        item_id: "123",
-        short_title: "Test",
-        title: "Test Item",
-        description: "Test description",
-        fair_market_value: "100",
-        categories: "TEST",
-        notes: "Contact us to book",
-        expiration_notice: "12/31/2026"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "123",
+          short_title: "Test",
+          title: "Test Item",
+          description: "Test description",
+          fair_market_value: "100",
+          categories: "TEST",
+          notes: "Contact us to book",
+          expiration_notice: "12/31/2026"
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -80,14 +94,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "defaults notes and expiration_notice to empty strings" do
-      attrs = %{
-        item_id: "123",
-        short_title: "Test",
-        title: "Test Item",
-        description: "Test description",
-        fair_market_value: "100",
-        categories: "TEST"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "123",
+          short_title: "Test",
+          title: "Test Item",
+          description: "Test description",
+          fair_market_value: "100",
+          categories: "TEST"
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -98,10 +113,11 @@ defmodule Receipts.AuctionItemTest do
 
   describe "changeset/2" do
     test "works with default struct" do
-      attrs = %{
-        item_id: "123",
-        title: "Test Title"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "123",
+          title: "Test Title"
+        })
 
       changeset = AuctionItem.changeset(%AuctionItem{}, attrs)
 
@@ -111,7 +127,13 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "works with existing struct" do
-      item = %AuctionItem{item_id: 100, title: "Original"}
+      item = %AuctionItem{
+        item_id: 100,
+        title: "Original",
+        csv_row_hash: "existing_hash",
+        csv_raw_line: "existing,raw,line"
+      }
+
       attrs = %{title: "Updated Title"}
 
       changeset = AuctionItem.changeset(item, attrs)
@@ -121,14 +143,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "casts string integers to integers" do
-      attrs = %{
-        item_id: "103",
-        short_title: "Test",
-        title: "Test Title",
-        description: "Test description",
-        fair_market_value: "1200",
-        categories: "HOME"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "103",
+          short_title: "Test",
+          title: "Test Title",
+          description: "Test description",
+          fair_market_value: "1200",
+          categories: "HOME"
+        })
 
       changeset = AuctionItem.changeset(attrs)
 
@@ -138,14 +161,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "applies defaults for nil values" do
-      attrs = %{
-        item_id: nil,
-        short_title: nil,
-        title: nil,
-        description: nil,
-        fair_market_value: nil,
-        categories: nil
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: nil,
+          short_title: nil,
+          title: nil,
+          description: nil,
+          fair_market_value: nil,
+          categories: nil
+        })
 
       changeset = AuctionItem.changeset(attrs)
 
@@ -159,14 +183,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "applies defaults for empty string numeric fields" do
-      attrs = %{
-        item_id: "",
-        short_title: "Test",
-        title: "Test",
-        description: "Test",
-        fair_market_value: "",
-        categories: "TEST"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "",
+          short_title: "Test",
+          title: "Test",
+          description: "Test",
+          fair_market_value: "",
+          categories: "TEST"
+        })
 
       changeset = AuctionItem.changeset(attrs)
 
@@ -176,14 +201,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "normalizes text fields" do
-      attrs = %{
-        item_id: "1",
-        short_title: "artist ,",
-        title: "services .",
-        description: "This is  a test.Good stuff !",
-        fair_market_value: "100",
-        categories: "ART"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "1",
+          short_title: "artist ,",
+          title: "services .",
+          description: "This is  a test.Good stuff !",
+          fair_market_value: "100",
+          categories: "ART"
+        })
 
       changeset = AuctionItem.changeset(attrs)
 
@@ -194,14 +220,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "sets defaults for notes and expiration_notice" do
-      attrs = %{
-        item_id: "1",
-        short_title: "Test",
-        title: "Test",
-        description: "Test",
-        fair_market_value: "100",
-        categories: "TEST"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "1",
+          short_title: "Test",
+          title: "Test",
+          description: "Test",
+          fair_market_value: "100",
+          categories: "TEST"
+        })
 
       changeset = AuctionItem.changeset(attrs)
 
@@ -211,16 +238,17 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "preserves non-nil values" do
-      attrs = %{
-        item_id: "123",
-        short_title: "Short",
-        title: "Title",
-        description: "Description",
-        fair_market_value: "500",
-        categories: "CATEGORY",
-        notes: "Call ahead",
-        expiration_notice: "12/31/2026"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "123",
+          short_title: "Short",
+          title: "Title",
+          description: "Description",
+          fair_market_value: "500",
+          categories: "CATEGORY",
+          notes: "Call ahead",
+          expiration_notice: "12/31/2026"
+        })
 
       changeset = AuctionItem.changeset(attrs)
 
@@ -232,14 +260,15 @@ defmodule Receipts.AuctionItemTest do
 
   describe "normalize_text/1" do
     test "removes spaces before punctuation" do
-      attrs = %{
-        item_id: "1",
-        short_title: "artist ,",
-        title: "services .",
-        description: "This is cubism . Very nice !",
-        fair_market_value: "100",
-        categories: "ART"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "1",
+          short_title: "artist ,",
+          title: "services .",
+          description: "This is cubism . Very nice !",
+          fair_market_value: "100",
+          categories: "ART"
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -249,14 +278,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "adds spaces after sentence-ending punctuation" do
-      attrs = %{
-        item_id: "1",
-        short_title: "Test",
-        title: "Title",
-        description: "sentence.Another sentence!Third sentence?Fourth",
-        fair_market_value: "100",
-        categories: "TEST"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "1",
+          short_title: "Test",
+          title: "Title",
+          description: "sentence.Another sentence!Third sentence?Fourth",
+          fair_market_value: "100",
+          categories: "TEST"
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -264,14 +294,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "collapses multiple spaces" do
-      attrs = %{
-        item_id: "1",
-        short_title: "This  is",
-        title: "a   test",
-        description: "with    multiple     spaces",
-        fair_market_value: "100",
-        categories: "TEST"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "1",
+          short_title: "This  is",
+          title: "a   test",
+          description: "with    multiple     spaces",
+          fair_market_value: "100",
+          categories: "TEST"
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -281,14 +312,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "handles combined issues" do
-      attrs = %{
-        item_id: "1",
-        short_title: "Test",
-        title: "Test",
-        description: "This is a  rare item.Good for  collectors ; you!Lounge here .",
-        fair_market_value: "100",
-        categories: "TEST"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "1",
+          short_title: "Test",
+          title: "Test",
+          description: "This is a  rare item.Good for  collectors ; you!Lounge here .",
+          fair_market_value: "100",
+          categories: "TEST"
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -296,14 +328,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "removes spaces before semicolons" do
-      attrs = %{
-        item_id: "1",
-        short_title: "Test",
-        title: "Test",
-        description: "petting ; learning and grooming ; fun",
-        fair_market_value: "100",
-        categories: "TEST"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "1",
+          short_title: "Test",
+          title: "Test",
+          description: "petting ; learning and grooming ; fun",
+          fair_market_value: "100",
+          categories: "TEST"
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -311,14 +344,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "handles nil values" do
-      attrs = %{
-        item_id: "1",
-        short_title: nil,
-        title: nil,
-        description: nil,
-        fair_market_value: "100",
-        categories: "TEST"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "1",
+          short_title: nil,
+          title: nil,
+          description: nil,
+          fair_market_value: "100",
+          categories: "TEST"
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -328,14 +362,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "handles already clean text" do
-      attrs = %{
-        item_id: "1",
-        short_title: "Clean Title",
-        title: "Another Clean Title",
-        description: "This is already clean. No issues here!",
-        fair_market_value: "100",
-        categories: "TEST"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "1",
+          short_title: "Clean Title",
+          title: "Another Clean Title",
+          description: "This is already clean. No issues here!",
+          fair_market_value: "100",
+          categories: "TEST"
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -347,14 +382,15 @@ defmodule Receipts.AuctionItemTest do
 
   describe "ensure_non_negative_integers/1" do
     test "converts negative fair_market_value to 0" do
-      attrs = %{
-        item_id: "130",
-        short_title: "Test",
-        title: "Test",
-        description: "Test",
-        fair_market_value: "-1",
-        categories: "TEST"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "130",
+          short_title: "Test",
+          title: "Test",
+          description: "Test",
+          fair_market_value: "-1",
+          categories: "TEST"
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -362,14 +398,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "converts negative item_id to 0" do
-      attrs = %{
-        item_id: "-5",
-        short_title: "Test",
-        title: "Test",
-        description: "Test",
-        fair_market_value: "100",
-        categories: "TEST"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "-5",
+          short_title: "Test",
+          title: "Test",
+          description: "Test",
+          fair_market_value: "100",
+          categories: "TEST"
+        })
 
       item = AuctionItem.new(attrs)
 
@@ -377,14 +414,15 @@ defmodule Receipts.AuctionItemTest do
     end
 
     test "preserves positive values" do
-      attrs = %{
-        item_id: "123",
-        short_title: "Test",
-        title: "Test",
-        description: "Test",
-        fair_market_value: "500",
-        categories: "TEST"
-      }
+      attrs =
+        sample_attrs(%{
+          item_id: "123",
+          short_title: "Test",
+          title: "Test",
+          description: "Test",
+          fair_market_value: "500",
+          categories: "TEST"
+        })
 
       item = AuctionItem.new(attrs)
 
