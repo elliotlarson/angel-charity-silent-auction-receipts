@@ -57,7 +57,7 @@ defmodule Receipts.ConfigTest do
   describe "database configuration" do
     test "database configuration is present" do
       config = Application.get_env(:receipts, Receipts.Repo)
-      assert config[:database] =~ "receipts_"
+      assert config[:database] =~ "db/receipts_"
       assert config[:pool_size] == 5
     end
 

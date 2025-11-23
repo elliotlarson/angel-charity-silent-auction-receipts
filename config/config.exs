@@ -1,7 +1,7 @@
 import Config
 
 config :receipts, Receipts.Repo,
-  database: "receipts_#{config_env()}.db",
+  database: "db/receipts_#{config_env()}.db",
   pool_size: 5,
   stacktrace: true,
   show_sensitive_data_on_connection_error: true
