@@ -2,11 +2,12 @@ defmodule Mix.Tasks.GenerateReceipts do
   use Mix.Task
   alias Receipts.AuctionItem
   alias Receipts.ReceiptGenerator
+  alias Receipts.ChromicPDFHelper
 
   @shortdoc "Generate PDF receipts for all auction items"
 
   def run(_args) do
-    ensure_chromic_pdf_started()
+    ChromicPDFHelper.ensure_started()
 
     json_dir = Application.get_env(:receipts, :json_dir, "db/auction_items/json")
     pdf_dir = Application.get_env(:receipts, :pdf_dir, "receipts/pdf")
@@ -78,25 +79,5 @@ defmodule Mix.Tasks.GenerateReceipts do
     |> String.downcase()
     |> String.replace(~r/[^a-z0-9]+/, "_")
     |> String.trim("_")
-  end
-
-  defp ensure_chromic_pdf_started do
-    Application.ensure_all_started(:chromic_pdf)
-
-    Process.flag(:trap_exit, true)
-
-    case Supervisor.start_link([ChromicPDF], strategy: :one_for_one) do
-      {:ok, _pid} ->
-        Process.flag(:trap_exit, false)
-        :ok
-
-      {:error, {:shutdown, {:failed_to_start_child, ChromicPDF, {:already_started, _}}}} ->
-        Process.flag(:trap_exit, false)
-        :ok
-
-      {:error, reason} ->
-        Process.flag(:trap_exit, false)
-        raise "Failed to start ChromicPDF: #{inspect(reason)}"
-    end
   end
 end

@@ -1,5 +1,6 @@
 defmodule Mix.Tasks.RegenerateReceipt do
   use Mix.Task
+  alias Receipts.ChromicPDFHelper
 
   @shortdoc "Regenerate a PDF receipt from an edited HTML file"
 
@@ -32,7 +33,7 @@ defmodule Mix.Tasks.RegenerateReceipt do
   end
 
   def run([item_id_str | _]) do
-    ensure_chromic_pdf_started()
+    ChromicPDFHelper.ensure_started()
 
     case Integer.parse(item_id_str) do
       {item_id, _} ->
@@ -83,26 +84,6 @@ defmodule Mix.Tasks.RegenerateReceipt do
           Mix.shell().info("  - #{Path.relative_to_cwd(file)}")
         end)
         exit({:shutdown, 1})
-    end
-  end
-
-  defp ensure_chromic_pdf_started do
-    Application.ensure_all_started(:chromic_pdf)
-
-    Process.flag(:trap_exit, true)
-
-    case Supervisor.start_link([ChromicPDF], strategy: :one_for_one) do
-      {:ok, _pid} ->
-        Process.flag(:trap_exit, false)
-        :ok
-
-      {:error, {:shutdown, {:failed_to_start_child, ChromicPDF, {:already_started, _}}}} ->
-        Process.flag(:trap_exit, false)
-        :ok
-
-      {:error, reason} ->
-        Process.flag(:trap_exit, false)
-        raise "Failed to start ChromicPDF: #{inspect(reason)}"
     end
   end
 end
