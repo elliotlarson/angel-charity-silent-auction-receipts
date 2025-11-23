@@ -66,8 +66,16 @@ defmodule Mix.Tasks.ProcessAuctionItems do
       Mix.shell().info("  #{index}. #{file}")
     end)
 
-    selection = Mix.shell().prompt("Select file number:") |> String.trim() |> String.to_integer()
-    Enum.at(files, selection - 1)
+    input = Mix.shell().prompt("Select file number:") |> String.trim()
+
+    case Integer.parse(input) do
+      {selection, _} when selection > 0 and selection <= length(files) ->
+        Enum.at(files, selection - 1)
+
+      _ ->
+        Mix.shell().error("Invalid selection. Please enter a number between 1 and #{length(files)}")
+        prompt_file_selection(files)
+    end
   end
 
   defp process_file(filename, opts) do
