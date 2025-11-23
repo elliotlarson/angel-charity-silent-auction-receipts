@@ -42,32 +42,29 @@ defmodule Receipts.AuctionItem do
 
   defp apply_defaults(changeset) do
     changeset
-    |> put_default(:item_id, 0)
-    |> put_default(:short_title, "")
-    |> put_default(:title, "")
-    |> put_default(:description, "")
-    |> put_default(:fair_market_value, 0)
-    |> put_default(:categories, "")
-    |> put_default(:notes, "")
-    |> put_default(:expiration_notice, "")
+    |> put_default_if_nil_or_empty(:item_id, 0)
+    |> put_default_if_nil_or_empty(:fair_market_value, 0)
+    |> put_default_if_nil(:short_title, "")
+    |> put_default_if_nil(:title, "")
+    |> put_default_if_nil(:description, "")
+    |> put_default_if_nil(:categories, "")
+    |> put_default_if_nil(:notes, "")
+    |> put_default_if_nil(:expiration_notice, "")
   end
 
-  defp put_default(changeset, field, default) do
-    value = get_field(changeset, field)
-    in_changes = Map.has_key?(changeset.changes, field)
-
-    should_apply =
-      case {field, value, in_changes} do
-        {_, nil, _} -> true
-        {f, "", _} when f in [:item_id, :fair_market_value] -> true
-        {_, _, false} -> true  # Not in changes, apply default explicitly
-        _ -> false
-      end
-
-    if should_apply do
+  defp put_default_if_nil(changeset, field, default) do
+    if get_field(changeset, field) == nil do
       put_change(changeset, field, default)
     else
       changeset
+    end
+  end
+
+  defp put_default_if_nil_or_empty(changeset, field, default) do
+    case get_field(changeset, field) do
+      nil -> put_change(changeset, field, default)
+      "" -> put_change(changeset, field, default)
+      _ -> changeset
     end
   end
 
