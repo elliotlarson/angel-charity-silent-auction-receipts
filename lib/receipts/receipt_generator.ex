@@ -21,27 +21,11 @@ defmodule Receipts.ReceiptGenerator do
 
     assigns = %{
       item: auction_item,
-      formatted_value: format_currency(auction_item.fair_market_value),
+      formatted_value: Number.Currency.number_to_currency(auction_item.fair_market_value),
       logo_path: get_logo_data_uri()
     }
 
     EEx.eval_string(template, assigns: assigns)
-  end
-
-  defp format_currency(value) when is_integer(value) do
-    dollars = div(value, 1)
-    cents = 0
-
-    whole_part =
-      dollars
-      |> Integer.to_string()
-      |> String.graphemes()
-      |> Enum.reverse()
-      |> Enum.chunk_every(3)
-      |> Enum.join(",")
-      |> String.reverse()
-
-    "$#{whole_part}.#{String.pad_leading(Integer.to_string(cents), 2, "0")}"
   end
 
   defp get_logo_data_uri do

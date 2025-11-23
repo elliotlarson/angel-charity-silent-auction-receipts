@@ -3,6 +3,46 @@ defmodule Receipts.ReceiptGeneratorTest do
   alias Receipts.ReceiptGenerator
   alias Receipts.AuctionItem
 
+  describe "format_currency/1" do
+    # Access private function for testing
+    defp format_currency(value) do
+      item = AuctionItem.new(%{
+        item_id: 1,
+        title: "Test",
+        description: "<p>Test</p>",
+        fair_market_value: value
+      })
+
+      html = ReceiptGenerator.render_html(item)
+      [_before, currency, _after] = String.split(html, ~r/\$[\d,]+\.00/, include_captures: true)
+      currency
+    end
+
+    test "formats single digit" do
+      assert format_currency(5) == "$5.00"
+    end
+
+    test "formats hundreds" do
+      assert format_currency(500) == "$500.00"
+    end
+
+    test "formats thousands with comma" do
+      assert format_currency(1500) == "$1,500.00"
+    end
+
+    test "formats tens of thousands with comma" do
+      assert format_currency(25000) == "$25,000.00"
+    end
+
+    test "formats millions with commas" do
+      assert format_currency(1_250_000) == "$1,250,000.00"
+    end
+
+    test "formats zero" do
+      assert format_currency(0) == "$0.00"
+    end
+  end
+
   describe "render_html/1" do
     test "renders receipt template with auction item data" do
       item = AuctionItem.new(%{

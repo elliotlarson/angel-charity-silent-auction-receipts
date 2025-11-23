@@ -26,7 +26,8 @@ defmodule Receipts.MixProject do
       {:ecto, "~> 3.11"},
       {:req, "~> 0.5.0"},
       {:dotenvy, "~> 0.8.0"},
-      {:chromic_pdf, "~> 1.17"}
+      {:chromic_pdf, "~> 1.17"},
+      {:number, "~> 1.0"}
     ]
   end
 end
