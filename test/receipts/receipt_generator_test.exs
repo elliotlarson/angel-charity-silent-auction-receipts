@@ -3,15 +3,28 @@ defmodule Receipts.ReceiptGeneratorTest do
   alias Receipts.ReceiptGenerator
   alias Receipts.AuctionItem
 
+  defp test_item_attrs(overrides \\ %{}) do
+    Map.merge(
+      %{
+        csv_row_hash: "test_hash",
+        csv_raw_line: "test,raw,line"
+      },
+      overrides
+    )
+  end
+
   describe "format_currency/1" do
     # Access private function for testing
     defp format_currency(value) do
-      item = AuctionItem.new(%{
-        item_id: 1,
-        title: "Test",
-        description: "<p>Test</p>",
-        fair_market_value: value
-      })
+      item =
+        AuctionItem.new(
+          test_item_attrs(%{
+            item_id: 1,
+            title: "Test",
+            description: "<p>Test</p>",
+            fair_market_value: value
+          })
+        )
 
       html = ReceiptGenerator.render_html(item)
       [_before, currency, _after] = String.split(html, ~r/\$[\d,]+\.00/, include_captures: true)
@@ -45,14 +58,17 @@ defmodule Receipts.ReceiptGeneratorTest do
 
   describe "render_html/1" do
     test "renders receipt template with auction item data" do
-      item = AuctionItem.new(%{
-        item_id: 103,
-        title: "One Year Monthly Landscaping Services",
-        description: "<p>Professional landscaping services.</p>",
-        fair_market_value: 1200,
-        notes: "Good for Tucson area.",
-        expiration_notice: "No expiration date."
-      })
+      item =
+        AuctionItem.new(
+          test_item_attrs(%{
+            item_id: 103,
+            title: "One Year Monthly Landscaping Services",
+            description: "<p>Professional landscaping services.</p>",
+            fair_market_value: 1200,
+            notes: "Good for Tucson area.",
+            expiration_notice: "No expiration date."
+          })
+        )
 
       html = ReceiptGenerator.render_html(item)
 
@@ -65,14 +81,17 @@ defmodule Receipts.ReceiptGeneratorTest do
     end
 
     test "handles empty notes field" do
-      item = AuctionItem.new(%{
-        item_id: 104,
-        title: "Test Item",
-        description: "<p>Test description</p>",
-        fair_market_value: 500,
-        notes: "",
-        expiration_notice: ""
-      })
+      item =
+        AuctionItem.new(
+          test_item_attrs(%{
+            item_id: 104,
+            title: "Test Item",
+            description: "<p>Test description</p>",
+            fair_market_value: 500,
+            notes: "",
+            expiration_notice: ""
+          })
+        )
 
       html = ReceiptGenerator.render_html(item)
 
@@ -82,12 +101,15 @@ defmodule Receipts.ReceiptGeneratorTest do
     end
 
     test "formats large currency values with commas" do
-      item = AuctionItem.new(%{
-        item_id: 999,
-        title: "Expensive Item",
-        description: "<p>Very valuable</p>",
-        fair_market_value: 25000
-      })
+      item =
+        AuctionItem.new(
+          test_item_attrs(%{
+            item_id: 999,
+            title: "Expensive Item",
+            description: "<p>Very valuable</p>",
+            fair_market_value: 25000
+          })
+        )
 
       html = ReceiptGenerator.render_html(item)
 
@@ -104,12 +126,15 @@ defmodule Receipts.ReceiptGeneratorTest do
     end
 
     test "generates PDF file", %{output_dir: output_dir} do
-      item = AuctionItem.new(%{
-        item_id: 103,
-        title: "Test Item",
-        description: "<p>Test description</p>",
-        fair_market_value: 1200
-      })
+      item =
+        AuctionItem.new(
+          test_item_attrs(%{
+            item_id: 103,
+            title: "Test Item",
+            description: "<p>Test description</p>",
+            fair_market_value: 1200
+          })
+        )
 
       output_path = Path.join(output_dir, "test_receipt.pdf")
       :ok = ReceiptGenerator.generate_pdf(item, output_path)
