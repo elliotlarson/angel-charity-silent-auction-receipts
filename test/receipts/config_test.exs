@@ -53,4 +53,17 @@ defmodule Receipts.ConfigTest do
       assert Config.csv_dir() == "custom/csv/path"
     end
   end
+
+  describe "database configuration" do
+    test "database configuration is present" do
+      config = Application.get_env(:receipts, Receipts.Repo)
+      assert config[:database] =~ "receipts_"
+      assert config[:pool_size] == 5
+    end
+
+    test "ecto_repos includes Receipts.Repo" do
+      repos = Application.get_env(:receipts, :ecto_repos)
+      assert Receipts.Repo in repos
+    end
+  end
 end

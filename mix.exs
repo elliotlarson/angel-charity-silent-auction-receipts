@@ -24,6 +24,8 @@ defmodule Receipts.MixProject do
       {:jason, "~> 1.4"},
       {:nimble_csv, "~> 1.2"},
       {:ecto, "~> 3.11"},
+      {:ecto_sql, "~> 3.11"},
+      {:ecto_sqlite3, "~> 0.17"},
       {:req, "~> 0.5.0"},
       {:dotenvy, "~> 0.8.0"},
       {:chromic_pdf, "~> 1.17"},
