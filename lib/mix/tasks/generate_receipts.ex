@@ -10,16 +10,64 @@ defmodule Mix.Tasks.GenerateReceipts do
   def run(_args) do
     ChromicPDFHelper.ensure_started()
 
+    json_files = list_json_files()
+
+    case json_files do
+      [] ->
+        Mix.shell().error("No JSON files found in #{Config.json_dir()}")
+
+      files ->
+        selected_file = prompt_file_selection(files)
+        process_file(selected_file)
+    end
+  end
+
+  defp list_json_files do
+    json_dir = Config.json_dir()
+
+    case File.ls(json_dir) do
+      {:ok, files} ->
+        files
+        |> Enum.filter(&String.ends_with?(&1, ".json"))
+        |> Enum.sort()
+
+      {:error, _} ->
+        []
+    end
+  end
+
+  defp prompt_file_selection(files) do
+    Mix.shell().info("Available JSON files:")
+
+    files
+    |> Enum.with_index(1)
+    |> Enum.each(fn {file, index} ->
+      Mix.shell().info("  #{index}. #{file}")
+    end)
+
+    input = Mix.shell().prompt("Select file number:") |> String.trim()
+
+    case Integer.parse(input) do
+      {selection, _} when selection > 0 and selection <= length(files) ->
+        Enum.at(files, selection - 1)
+
+      _ ->
+        Mix.shell().error("Invalid selection. Please enter a number between 1 and #{length(files)}")
+        prompt_file_selection(files)
+    end
+  end
+
+  defp process_file(filename) do
     json_dir = Config.json_dir()
     pdf_dir = Config.pdf_dir()
     html_dir = Config.html_dir()
 
-    Mix.shell().info("Generating receipts...")
+    Mix.shell().info("Generating receipts from #{filename}...")
 
     File.mkdir_p!(pdf_dir)
     File.mkdir_p!(html_dir)
 
-    items = load_auction_items(json_dir)
+    items = load_auction_items(json_dir, filename)
     total = length(items)
 
     Mix.shell().info("Found #{total} auction items")
@@ -42,18 +90,13 @@ defmodule Mix.Tasks.GenerateReceipts do
     end
   end
 
-  defp load_auction_items(json_dir) do
-    json_dir
-    |> File.ls!()
-    |> Enum.filter(&String.ends_with?(&1, ".json"))
-    |> Enum.flat_map(fn filename ->
-      path = Path.join(json_dir, filename)
-      {:ok, content} = File.read(path)
-      {:ok, items_data} = Jason.decode(content)
+  defp load_auction_items(json_dir, filename) do
+    path = Path.join(json_dir, filename)
+    {:ok, content} = File.read(path)
+    {:ok, items_data} = Jason.decode(content)
 
-      Enum.map(items_data, fn item_data ->
-        AuctionItem.new(item_data)
-      end)
+    Enum.map(items_data, fn item_data ->
+      AuctionItem.new(item_data)
     end)
   end
 

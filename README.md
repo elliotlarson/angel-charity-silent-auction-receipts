@@ -23,7 +23,7 @@ When you receive a new CSV file from Angel Charity, follow these steps:
    mix generate_receipts
    ```
 
-   - Reads all JSON files from `db/auction_items/json/`
+   - Select the JSON file from the list
    - Generates PDFs in `receipts/pdf/`
    - Generates HTML in `receipts/html/`
    - Files named: `receipt_<id>_<short_title>.[pdf|html]`
@@ -122,11 +122,12 @@ mix generate_receipts
 
 The task will:
 
-1. Read all JSON files from `db/auction_items/json/`
-2. Generate a PDF receipt for each item in `receipts/pdf/`
-3. Generate an HTML receipt for each item in `receipts/html/`
-4. Display progress for each receipt
-5. Show a summary when complete
+1. Display a list of available JSON files in `db/auction_items/json/`
+2. Prompt you to select a file by number
+3. Generate a PDF receipt for each item in `receipts/pdf/`
+4. Generate an HTML receipt for each item in `receipts/html/`
+5. Display progress for each receipt
+6. Show a summary when complete
 
 ### Output Structure
 
@@ -148,7 +149,11 @@ Files are named: `receipt_<item_id>_<short_title_in_snake_case>.[pdf|html]`
 
 ```bash
 $ mix generate_receipts
-Generating receipts...
+Available JSON files:
+  1. 20251121_auction_items.json
+  2. 20251123_auction_items.json
+Select file number: 2
+Generating receipts from 20251123_auction_items.json...
 Found 137 auction items
 [1/137] Generating receipt for item #103...
 [2/137] Generating receipt for item #104...

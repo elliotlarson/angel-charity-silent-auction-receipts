@@ -64,11 +64,15 @@ defmodule Mix.Tasks.GenerateReceiptsTest do
     :ok
   end
 
-  test "generates receipts for all auction items" do
-    output = capture_io(fn ->
-      Mix.Tasks.GenerateReceipts.run([])
-    end)
+  test "generates receipts for selected JSON file" do
+    output =
+      capture_io([input: "1\n"], fn ->
+        Mix.Tasks.GenerateReceipts.run([])
+      end)
 
+    assert output =~ "Available JSON files:"
+    assert output =~ "1. test_items.json"
+    assert output =~ "Generating receipts from test_items.json"
     assert output =~ "Found 2 auction items"
     assert output =~ "Successfully generated: 2 receipts"
 
@@ -76,5 +80,16 @@ defmodule Mix.Tasks.GenerateReceiptsTest do
     assert File.exists?(Path.join(@test_pdf_dir, "receipt_2_test_two.pdf"))
     assert File.exists?(Path.join(@test_html_dir, "receipt_1_test_one.html"))
     assert File.exists?(Path.join(@test_html_dir, "receipt_2_test_two.html"))
+  end
+
+  test "handles invalid file selection gracefully" do
+    output =
+      capture_io(:stderr, fn ->
+        capture_io([input: "99\n1\n"], fn ->
+          Mix.Tasks.GenerateReceipts.run([])
+        end)
+      end)
+
+    assert output =~ "Invalid selection"
   end
 end
