@@ -18,13 +18,13 @@ defmodule Receipts.AuctionItem do
   end
 
   def new(attrs) do
-    attrs
-    |> changeset()
+    %__MODULE__{}
+    |> changeset(attrs)
     |> apply_action!(:insert)
   end
 
-  def changeset(attrs) do
-    %__MODULE__{}
+  def changeset(%__MODULE__{} = item \\ %__MODULE__{}, attrs) do
+    item
     |> cast(attrs, [
       :item_id,
       :short_title,

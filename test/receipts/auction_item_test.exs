@@ -96,7 +96,30 @@ defmodule Receipts.AuctionItemTest do
     end
   end
 
-  describe "changeset/1" do
+  describe "changeset/2" do
+    test "works with default struct" do
+      attrs = %{
+        item_id: "123",
+        title: "Test Title"
+      }
+
+      changeset = AuctionItem.changeset(%AuctionItem{}, attrs)
+
+      assert changeset.valid?
+      assert get_change(changeset, :item_id) == 123
+      assert get_change(changeset, :title) == "Test Title"
+    end
+
+    test "works with existing struct" do
+      item = %AuctionItem{item_id: 100, title: "Original"}
+      attrs = %{title: "Updated Title"}
+
+      changeset = AuctionItem.changeset(item, attrs)
+
+      assert changeset.valid?
+      assert get_change(changeset, :title) == "Updated Title"
+    end
+
     test "casts string integers to integers" do
       attrs = %{
         item_id: "103",
