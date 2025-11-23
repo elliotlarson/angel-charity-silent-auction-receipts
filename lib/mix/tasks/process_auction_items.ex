@@ -4,10 +4,11 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   alias Receipts.AuctionItem
   alias Receipts.AIDescriptionProcessor
   alias Receipts.Config
+  alias Receipts.Repo
 
   NimbleCSV.define(CSVParser, separator: ",", escape: "\"")
 
-  @shortdoc "Process auction items CSV files and convert to JSON"
+  @shortdoc "Process auction items CSV files and save to database"
 
   @field_mappings %{
     "ITEM ID" => :item_id,
@@ -20,6 +21,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
   def run(args) do
     # Start required applications
+    Application.ensure_all_started(:receipts)
     Application.ensure_all_started(:req)
 
     # Load .env file if it exists
@@ -81,25 +83,15 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
   defp process_file(filename, opts) do
     csv_path = Path.join(Config.csv_dir(), filename)
-    json_filename = Path.basename(filename, ".csv") <> ".json"
-    json_path = Path.join(Config.json_dir(), json_filename)
 
-    skip_ai = Keyword.get(opts, :skip_ai_processing, false)
+    Mix.shell().info("Processing #{filename}...")
 
-    unless skip_ai do
-      Mix.shell().info("AI processing enabled - this may take a few minutes...")
-    end
+    csv_path
+    |> read_and_parse_csv()
+    |> process_rows(opts)
 
-    items =
-      csv_path
-      |> read_and_parse_csv()
-      |> clean_data(opts)
-
-    json_content = Jason.encode!(items, pretty: true)
-    File.write!(json_path, json_content)
-
-    Mix.shell().info("Successfully processed #{length(items)} items")
-    Mix.shell().info("Output saved to: #{json_path}")
+    Mix.shell().info("\nProcessing complete!")
+    Mix.shell().info("Total items in database: #{Repo.aggregate(AuctionItem, :count)}")
   end
 
   @doc false
@@ -110,25 +102,66 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     |> Enum.to_list()
   end
 
-  @doc false
-  def clean_data(rows, opts \\ []) do
+  defp process_rows(rows, opts) do
     [_title_row, headers, _empty_row | data_rows] = rows
 
     valid_rows = Enum.reject(data_rows, &is_placeholder_row?/1)
     total = length(valid_rows)
     skip_ai = Keyword.get(opts, :skip_ai_processing, false)
 
-    valid_rows
-    |> Enum.with_index(1)
-    |> Enum.map(fn {row, index} ->
-      item = build_item(row, headers, opts)
+    stats = %{new: 0, updated: 0, skipped: 0}
 
-      unless skip_ai do
-        Mix.shell().info("Processed item #{index}/#{total} (ID: #{item.item_id})")
-      end
+    stats =
+      valid_rows
+      |> Enum.with_index(1)
+      |> Enum.reduce(stats, fn {row, index} ->
+        process_row(row, headers, index, total, skip_ai, stats)
+      end)
 
-      item
-    end)
+    Mix.shell().info("\nSummary:")
+    Mix.shell().info("  New items: #{stats.new}")
+    Mix.shell().info("  Updated items: #{stats.updated}")
+    Mix.shell().info("  Skipped (unchanged): #{stats.skipped}")
+
+    stats
+  end
+
+  defp process_row(row, headers, index, total, skip_ai, stats) do
+    csv_raw_line = Enum.join(row, ",")
+    csv_row_hash = hash_csv_row(csv_raw_line)
+
+    item_id_str = get_column(row, find_header_index(headers, "ITEM ID"))
+    item_id = String.to_integer(item_id_str)
+
+    existing = Repo.get_by(AuctionItem, item_id: item_id)
+
+    cond do
+      is_nil(existing) ->
+        # New item - process and insert
+        attrs = build_attrs(row, headers, csv_row_hash, csv_raw_line, skip_ai: skip_ai)
+        changeset = AuctionItem.changeset(%AuctionItem{}, attrs)
+        {:ok, _item} = Repo.insert(changeset)
+        Mix.shell().info("[#{index}/#{total}] Created item ##{item_id}")
+        %{stats | new: stats.new + 1}
+
+      existing.csv_row_hash == csv_row_hash ->
+        # Unchanged - skip processing
+        Mix.shell().info("[#{index}/#{total}] Skipped item ##{item_id} (unchanged)")
+        %{stats | skipped: stats.skipped + 1}
+
+      true ->
+        # Changed - reprocess and update
+        attrs = build_attrs(row, headers, csv_row_hash, csv_raw_line, skip_ai: skip_ai)
+        changeset = AuctionItem.changeset(existing, attrs)
+        {:ok, _item} = Repo.update(changeset)
+        Mix.shell().info("[#{index}/#{total}] Updated item ##{item_id}")
+        %{stats | updated: stats.updated + 1}
+    end
+  end
+
+  defp hash_csv_row(csv_line) do
+    :crypto.hash(:sha256, csv_line)
+    |> Base.encode16(case: :lower)
   end
 
   @doc false
@@ -147,8 +180,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     |> String.trim()
   end
 
-  @doc false
-  def build_item(row, headers, opts \\ []) do
+  defp build_attrs(row, headers, csv_row_hash, csv_raw_line, opts) do
     attrs =
       @field_mappings
       |> Enum.reduce(%{}, fn {header, field_name}, acc ->
@@ -169,8 +201,9 @@ defmodule Mix.Tasks.ProcessAuctionItems do
       end)
 
     attrs
+    |> Map.put(:csv_row_hash, csv_row_hash)
+    |> Map.put(:csv_raw_line, csv_raw_line)
     |> AIDescriptionProcessor.process(opts)
-    |> AuctionItem.new()
   end
 
   defp find_header_index(headers, target_header) do
