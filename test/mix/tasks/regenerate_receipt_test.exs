@@ -64,8 +64,10 @@ defmodule Mix.Tasks.RegenerateReceiptTest do
 
   test "errors when no HTML file found" do
     try do
-      capture_io(fn ->
-        Mix.Tasks.RegenerateReceipt.run(["888"])
+      capture_io(:stderr, fn ->
+        capture_io(fn ->
+          Mix.Tasks.RegenerateReceipt.run(["888"])
+        end)
       end)
     catch
       :exit, {:shutdown, 1} -> :ok
@@ -77,8 +79,10 @@ defmodule Mix.Tasks.RegenerateReceiptTest do
 
   test "errors when no item ID provided" do
     try do
-      capture_io(fn ->
-        Mix.Tasks.RegenerateReceipt.run([])
+      capture_io(:stderr, fn ->
+        capture_io(fn ->
+          Mix.Tasks.RegenerateReceipt.run([])
+        end)
       end)
     catch
       :exit, {:shutdown, 1} -> :ok
