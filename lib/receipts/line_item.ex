@@ -7,6 +7,7 @@ defmodule Receipts.LineItem do
   @derive Jason.Encoder
   schema "line_items" do
     field :item_identifier, :integer
+    field :identifier, :string
     field :short_title, :string
     field :title, :string
     field :description, :string
@@ -27,6 +28,7 @@ defmodule Receipts.LineItem do
     |> cast(attrs, [
       :item_id,
       :item_identifier,
+      :identifier,
       :short_title,
       :title,
       :description,
@@ -38,10 +40,11 @@ defmodule Receipts.LineItem do
       :csv_raw_line
     ])
     |> apply_defaults()
-    |> validate_required([:item_id, :csv_row_hash, :csv_raw_line])
+    |> validate_required([:item_id, :identifier, :csv_row_hash, :csv_raw_line])
     |> ensure_non_negative_integers()
     |> normalize_text_fields()
     |> foreign_key_constraint(:item_id)
+    |> unique_constraint([:item_id, :identifier])
   end
 
   defp apply_defaults(changeset) do
@@ -89,5 +92,31 @@ defmodule Receipts.LineItem do
     text
     |> TextNormalizer.normalize()
     |> HtmlFormatter.format_description()
+  end
+
+  @doc """
+  Returns the next available letter identifier for a given item.
+  Queries existing line items for the item and returns the next letter in sequence.
+
+  Examples:
+    - No existing line items: returns "a"
+    - Existing line items with "a": returns "b"
+    - Existing line items with "a", "b": returns "c"
+  """
+  def next_identifier(item_id) do
+    import Ecto.Query
+    alias Receipts.Repo
+
+    max_identifier =
+      from(li in __MODULE__,
+        where: li.item_id == ^item_id,
+        select: max(li.identifier)
+      )
+      |> Repo.one()
+
+    case max_identifier do
+      nil -> "a"
+      identifier -> String.to_charlist(identifier) |> hd() |> Kernel.+(1) |> List.wrap() |> to_string()
+    end
   end
 end

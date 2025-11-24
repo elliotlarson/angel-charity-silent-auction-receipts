@@ -86,7 +86,7 @@
     <div class="mb-4">
       <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-300">
         <h3 class="text-base font-semibold">Auction Item Details</h3>
-        <p class="text-sm text-gray-600 font-normal">Item #<%= @item.item_identifier %></p>
+        <p class="text-sm text-gray-600 font-normal">Item #<%= @item.item_identifier %><%= @item.identifier %></p>
       </div>
 
       <div class="mb-3">

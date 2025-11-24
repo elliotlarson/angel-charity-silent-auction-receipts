@@ -95,8 +95,11 @@ defmodule Mix.Tasks.MigrateJsonToDb do
           # Check if line item already exists
           case Repo.get_by(LineItem, item_id: item.id, csv_row_hash: csv_row_hash) do
             nil ->
+              identifier = LineItem.next_identifier(item.id)
+              attrs_with_identifier = Map.put(attrs, "identifier", identifier)
+
               %LineItem{}
-              |> LineItem.changeset(attrs)
+              |> LineItem.changeset(attrs_with_identifier)
               |> Repo.insert!()
 
               new_acc = %{acc_inner | line_items_imported: acc_inner.line_items_imported + 1}

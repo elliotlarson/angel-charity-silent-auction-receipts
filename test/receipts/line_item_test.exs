@@ -17,6 +17,7 @@ defmodule Receipts.LineItemTest do
       %{
         item_id: item.id,
         item_identifier: item.item_identifier,
+        identifier: "a",
         csv_row_hash: "abc123",
         csv_raw_line: "103,HOME,Landscaping,One Year Monthly Landscaping Services,..."
       },
@@ -82,6 +83,46 @@ defmodule Receipts.LineItemTest do
 
       assert changeset.valid?
       assert get_change(changeset, :fair_market_value) == 0
+    end
+  end
+
+  describe "next_identifier/1" do
+    test "returns 'a' when no line items exist for item" do
+      item = create_item(999)
+      assert LineItem.next_identifier(item.id) == "a"
+    end
+
+    test "returns 'b' when one line item exists" do
+      item = create_item(100)
+      Repo.insert!(%LineItem{
+        item_id: item.id,
+        item_identifier: item.item_identifier,
+        identifier: "a",
+        csv_row_hash: "hash1",
+        csv_raw_line: "raw1"
+      })
+
+      assert LineItem.next_identifier(item.id) == "b"
+    end
+
+    test "returns 'c' when two line items exist" do
+      item = create_item(101)
+      Repo.insert!(%LineItem{
+        item_id: item.id,
+        item_identifier: item.item_identifier,
+        identifier: "a",
+        csv_row_hash: "hash1",
+        csv_raw_line: "raw1"
+      })
+      Repo.insert!(%LineItem{
+        item_id: item.id,
+        item_identifier: item.item_identifier,
+        identifier: "b",
+        csv_row_hash: "hash2",
+        csv_raw_line: "raw2"
+      })
+
+      assert LineItem.next_identifier(item.id) == "c"
     end
   end
 

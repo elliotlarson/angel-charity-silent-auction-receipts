@@ -158,8 +158,10 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
       true ->
         # New line item - process and insert
+        identifier = LineItem.next_identifier(item.id)
         attrs = build_attrs(row, headers, csv_row_hash, csv_raw_line, item.id, skip_ai: skip_ai)
-        changeset = LineItem.changeset(%LineItem{}, attrs)
+        attrs_with_identifier = Map.put(attrs, :identifier, identifier)
+        changeset = LineItem.changeset(%LineItem{}, attrs_with_identifier)
         {:ok, _line_item} = Repo.insert(changeset)
         Mix.shell().info("[#{index}/#{total}] Created line item for ##{item_identifier}")
         %{stats | new_line_items: stats.new_line_items + 1}
