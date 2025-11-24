@@ -113,25 +113,54 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     total = length(valid_rows)
     skip_ai = Keyword.get(opts, :skip_ai_processing, false)
 
-    stats = %{new_items: 0, new_line_items: 0, updated: 0, skipped: 0}
+    stats = %{new_items: 0, new_line_items: 0, updated: 0, skipped: 0, deleted: 0, deleted_items: 0}
 
-    stats =
+    # Group rows by item_identifier to determine position within each item
+    rows_by_item = group_rows_by_item(valid_rows, headers)
+
+    # Track which line items we've processed from CSV
+    {stats, processed_line_item_ids} =
       valid_rows
       |> Enum.with_index(1)
-      |> Enum.reduce(stats, fn {row, index}, acc ->
-        process_row(row, headers, index, total, skip_ai, acc)
+      |> Enum.reduce({stats, MapSet.new()}, fn {row, csv_index}, {acc, seen} ->
+        item_identifier_str = get_column(row, find_header_index(headers, "ITEM ID"))
+        item_identifier = String.to_integer(item_identifier_str)
+        position = get_position_within_item(row, rows_by_item[item_identifier])
+
+        {updated_stats, line_item_id} = process_row(row, headers, csv_index, total, position, skip_ai, acc)
+        {updated_stats, MapSet.put(seen, line_item_id)}
       end)
+
+    # Delete line items that are no longer in the CSV
+    stats = delete_removed_line_items(processed_line_item_ids, stats)
+
+    # Delete items that no longer have any line items
+    stats = delete_empty_items(stats)
 
     Mix.shell().info("\nSummary:")
     Mix.shell().info("  New items: #{stats.new_items}")
     Mix.shell().info("  New line items: #{stats.new_line_items}")
     Mix.shell().info("  Updated line items: #{stats.updated}")
     Mix.shell().info("  Skipped (unchanged): #{stats.skipped}")
+    Mix.shell().info("  Deleted items: #{stats.deleted_items}")
+    Mix.shell().info("  Deleted line items: #{stats.deleted}")
 
     stats
   end
 
-  defp process_row(row, headers, index, total, skip_ai, stats) do
+  defp group_rows_by_item(rows, headers) do
+    rows
+    |> Enum.group_by(fn row ->
+      item_identifier_str = get_column(row, find_header_index(headers, "ITEM ID"))
+      String.to_integer(item_identifier_str)
+    end)
+  end
+
+  defp get_position_within_item(row, rows_for_item) do
+    Enum.find_index(rows_for_item, fn r -> r == row end) + 1
+  end
+
+  defp process_row(row, headers, csv_index, total, identifier, skip_ai, stats) do
     csv_raw_line = Enum.join(row, ",")
     csv_row_hash = hash_csv_row(csv_raw_line)
 
@@ -140,31 +169,41 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
     # Find or create Item
     {item, item_created} = find_or_create_item(item_identifier)
-
-    # Check for existing line item by csv_row_hash
-    existing_line_item =
-      Repo.one(
-        from li in LineItem,
-          where: li.item_id == ^item.id and li.csv_row_hash == ^csv_row_hash
-      )
-
     stats = if item_created, do: %{stats | new_items: stats.new_items + 1}, else: stats
 
-    cond do
-      not is_nil(existing_line_item) ->
-        Mix.shell().info("[#{index}/#{total}] Skipped line item for ##{item_identifier} (unchanged)")
-        %{stats | skipped: stats.skipped + 1}
+    # Find existing line item by item_id + identifier (position)
+    existing_by_position =
+      Repo.one(
+        from li in LineItem,
+          where: li.item_id == ^item.id and li.identifier == ^identifier
+      )
 
-      true ->
+    {stats, line_item_id} =
+      cond do
+        # Same position, same hash - unchanged, skip
+        not is_nil(existing_by_position) and existing_by_position.csv_row_hash == csv_row_hash ->
+          Mix.shell().info("[#{csv_index}/#{total}] Skipped line item for ##{item_identifier} (unchanged)")
+          {%{stats | skipped: stats.skipped + 1}, existing_by_position.id}
+
+        # Same position, different hash - data changed, update
+        not is_nil(existing_by_position) ->
+          attrs = build_attrs(row, headers, csv_row_hash, csv_raw_line, item.id, skip_ai: skip_ai)
+          changeset = LineItem.changeset(existing_by_position, attrs)
+          {:ok, updated_item} = Repo.update(changeset)
+          Mix.shell().info("[#{csv_index}/#{total}] Updated line item for ##{item_identifier}")
+          {%{stats | updated: stats.updated + 1}, updated_item.id}
+
         # New line item - process and insert
-        identifier = LineItem.next_identifier(item.id)
-        attrs = build_attrs(row, headers, csv_row_hash, csv_raw_line, item.id, skip_ai: skip_ai)
-        attrs_with_identifier = Map.put(attrs, :identifier, identifier)
-        changeset = LineItem.changeset(%LineItem{}, attrs_with_identifier)
-        {:ok, _line_item} = Repo.insert(changeset)
-        Mix.shell().info("[#{index}/#{total}] Created line item for ##{item_identifier}")
-        %{stats | new_line_items: stats.new_line_items + 1}
-    end
+        true ->
+          attrs = build_attrs(row, headers, csv_row_hash, csv_raw_line, item.id, skip_ai: skip_ai)
+          attrs_with_identifier = Map.put(attrs, :identifier, identifier)
+          changeset = LineItem.changeset(%LineItem{}, attrs_with_identifier)
+          {:ok, new_item} = Repo.insert(changeset)
+          Mix.shell().info("[#{csv_index}/#{total}] Created line item for ##{item_identifier}")
+          {%{stats | new_line_items: stats.new_line_items + 1}, new_item.id}
+      end
+
+    {stats, line_item_id}
   end
 
   defp find_or_create_item(item_identifier) do
@@ -233,5 +272,50 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     |> Enum.find_index(fn header ->
       String.upcase(String.trim(header)) == target_header
     end)
+  end
+
+  defp delete_removed_line_items(processed_line_item_ids, stats) do
+    # Find all line items in database that weren't in the CSV
+    all_line_item_ids =
+      Repo.all(from li in LineItem, select: li.id)
+      |> MapSet.new()
+
+    removed_ids = MapSet.difference(all_line_item_ids, processed_line_item_ids)
+
+    if MapSet.size(removed_ids) > 0 do
+      Mix.shell().info("\nDeleting #{MapSet.size(removed_ids)} line items no longer in CSV...")
+
+      {deleted_count, _} =
+        from(li in LineItem, where: li.id in ^MapSet.to_list(removed_ids))
+        |> Repo.delete_all()
+
+      %{stats | deleted: deleted_count}
+    else
+      stats
+    end
+  end
+
+  defp delete_empty_items(stats) do
+    # Find items that have no line items
+    empty_item_ids =
+      from(i in Item,
+        left_join: li in assoc(i, :line_items),
+        group_by: i.id,
+        having: count(li.id) == 0,
+        select: i.id
+      )
+      |> Repo.all()
+
+    if length(empty_item_ids) > 0 do
+      Mix.shell().info("Deleting #{length(empty_item_ids)} items with no line items...")
+
+      {deleted_count, _} =
+        from(i in Item, where: i.id in ^empty_item_ids)
+        |> Repo.delete_all()
+
+      %{stats | deleted_items: deleted_count}
+    else
+      stats
+    end
   end
 end
