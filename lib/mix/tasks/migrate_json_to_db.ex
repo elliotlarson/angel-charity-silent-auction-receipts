@@ -88,7 +88,6 @@ defmodule Mix.Tasks.MigrateJsonToDb do
           attrs =
             item_data
             |> Map.put("item_id", item.id)
-            |> Map.put("item_identifier", item_identifier)
             |> Map.put("csv_row_hash", csv_row_hash)
             |> Map.put("csv_raw_line", csv_raw_line)
 

@@ -2,11 +2,14 @@ defmodule Receipts.ReceiptGeneratorTest do
   use ExUnit.Case
   alias Receipts.ReceiptGenerator
   alias Receipts.LineItem
+  alias Receipts.Item
 
   defp test_line_item(overrides) do
+    # Create a mock item association
+    item = %Item{id: nil, item_identifier: 1}
+
     Map.merge(
       %LineItem{
-        item_identifier: 1,
         identifier: 1,
         title: "Test",
         short_title: "Test",
@@ -16,7 +19,8 @@ defmodule Receipts.ReceiptGeneratorTest do
         notes: "",
         expiration_notice: "",
         csv_row_hash: "test_hash",
-        csv_raw_line: "test,raw,line"
+        csv_raw_line: "test,raw,line",
+        item: item
       },
       overrides
     )
@@ -58,9 +62,11 @@ defmodule Receipts.ReceiptGeneratorTest do
 
   describe "render_html/1" do
     test "renders receipt template with line item data" do
+      item = %Item{id: nil, item_identifier: 103}
+
       line_item =
         test_line_item(%{
-          item_identifier: 103,
+          item: item,
           title: "One Year Monthly Landscaping Services",
           description: "<p>Professional landscaping services.</p>",
           fair_market_value: 1200,
@@ -79,9 +85,11 @@ defmodule Receipts.ReceiptGeneratorTest do
     end
 
     test "handles empty notes field" do
+      item = %Item{id: nil, item_identifier: 104}
+
       line_item =
         test_line_item(%{
-          item_identifier: 104,
+          item: item,
           title: "Test Item",
           description: "<p>Test description</p>",
           fair_market_value: 500,
@@ -97,9 +105,11 @@ defmodule Receipts.ReceiptGeneratorTest do
     end
 
     test "formats large currency values with commas" do
+      item = %Item{id: nil, item_identifier: 999}
+
       line_item =
         test_line_item(%{
-          item_identifier: 999,
+          item: item,
           title: "Expensive Item",
           description: "<p>Very valuable</p>",
           fair_market_value: 25000
@@ -120,9 +130,11 @@ defmodule Receipts.ReceiptGeneratorTest do
     end
 
     test "generates PDF file", %{output_dir: output_dir} do
+      item = %Item{id: nil, item_identifier: 103}
+
       line_item =
         test_line_item(%{
-          item_identifier: 103,
+          item: item,
           title: "Test Item",
           description: "<p>Test description</p>",
           fair_market_value: 1200

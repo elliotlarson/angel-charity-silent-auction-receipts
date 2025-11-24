@@ -6,7 +6,6 @@ defmodule Receipts.LineItem do
 
   @derive Jason.Encoder
   schema "line_items" do
-    field :item_identifier, :integer
     field :identifier, :integer
     field :short_title, :string
     field :title, :string
@@ -27,7 +26,6 @@ defmodule Receipts.LineItem do
     line_item
     |> cast(attrs, [
       :item_id,
-      :item_identifier,
       :identifier,
       :short_title,
       :title,
@@ -49,7 +47,6 @@ defmodule Receipts.LineItem do
 
   defp apply_defaults(changeset) do
     changeset
-    |> put_default_if_nil_or_empty(:item_identifier, 0)
     |> put_default_if_nil_or_empty(:fair_market_value, 0)
     |> put_default_if_nil(:short_title, "")
     |> put_default_if_nil(:title, "")
@@ -77,7 +74,6 @@ defmodule Receipts.LineItem do
 
   defp ensure_non_negative_integers(changeset) do
     changeset
-    |> update_change(:item_identifier, &max(&1 || 0, 0))
     |> update_change(:fair_market_value, &max(&1 || 0, 0))
   end
 
@@ -137,12 +133,18 @@ defmodule Receipts.LineItem do
 
   @doc """
   Generates the base filename for receipts.
+  Expects line_item to have :item association preloaded.
 
   Examples:
     - Single line item: "receipt_103_landscaping"
     - Multiple line items: "receipt_139_1_of_3_ac_hotel"
   """
   def receipt_filename(line_item) do
+    alias Receipts.Repo
+
+    # Preload item if not already loaded
+    line_item = Repo.preload(line_item, :item)
+
     snake_case_title =
       line_item.short_title
       |> String.downcase()
@@ -152,9 +154,9 @@ defmodule Receipts.LineItem do
     total = count_for_item(line_item.item_id)
 
     if total > 1 do
-      "receipt_#{line_item.item_identifier}_#{line_item.identifier}_of_#{total}_#{snake_case_title}"
+      "receipt_#{line_item.item.item_identifier}_#{line_item.identifier}_of_#{total}_#{snake_case_title}"
     else
-      "receipt_#{line_item.item_identifier}_#{snake_case_title}"
+      "receipt_#{line_item.item.item_identifier}_#{snake_case_title}"
     end
   end
 end

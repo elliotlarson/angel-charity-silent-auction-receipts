@@ -16,7 +16,6 @@ defmodule Receipts.LineItemTest do
     Map.merge(
       %{
         item_id: item.id,
-        item_identifier: item.item_identifier,
         identifier: 1,
         csv_row_hash: "abc123",
         csv_raw_line: "103,HOME,Landscaping,One Year Monthly Landscaping Services,..."
@@ -48,14 +47,12 @@ defmodule Receipts.LineItemTest do
     test "casts string integers to integers" do
       item = create_item(103)
       attrs = sample_attrs(item, %{
-        item_identifier: "103",
         fair_market_value: "1200"
       })
 
       changeset = LineItem.changeset(%LineItem{}, attrs)
 
       assert changeset.valid?
-      assert get_change(changeset, :item_identifier) == 103
       assert get_change(changeset, :fair_market_value) == 1200
     end
 
@@ -96,7 +93,6 @@ defmodule Receipts.LineItemTest do
       item = create_item(100)
       Repo.insert!(%LineItem{
         item_id: item.id,
-        item_identifier: item.item_identifier,
         identifier: 1,
         csv_row_hash: "hash1",
         csv_raw_line: "raw1"
@@ -109,14 +105,12 @@ defmodule Receipts.LineItemTest do
       item = create_item(101)
       Repo.insert!(%LineItem{
         item_id: item.id,
-        item_identifier: item.item_identifier,
         identifier: 1,
         csv_row_hash: "hash1",
         csv_raw_line: "raw1"
       })
       Repo.insert!(%LineItem{
         item_id: item.id,
-        item_identifier: item.item_identifier,
         identifier: 2,
         csv_row_hash: "hash2",
         csv_raw_line: "raw2"

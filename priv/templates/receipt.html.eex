@@ -86,7 +86,7 @@
     <div class="mb-4">
       <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-300">
         <h3 class="text-base font-semibold">Auction Item Details</h3>
-        <p class="text-sm text-gray-600 font-normal">Item #<%= @item.item_identifier %><%= if @line_item_total > 1 do %> (<%= @line_item_position %> of <%= @line_item_total %>)<% end %></p>
+        <p class="text-sm text-gray-600 font-normal">Item #<%= @line_item.item.item_identifier %><%= if @line_item_total > 1 do %> (<%= @line_item_position %> of <%= @line_item_total %>)<% end %></p>
       </div>
 
       <div class="mb-3">

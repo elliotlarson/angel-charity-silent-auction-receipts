@@ -14,7 +14,6 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   @shortdoc "Process auction items CSV files and save to database"
 
   @field_mappings %{
-    "ITEM ID" => :item_identifier,
     "CATEGORIES (OPTIONAL)" => :categories,
     "15 CHARACTER DESCRIPTION" => :short_title,
     "100 CHARACTER DESCRIPTION" => :title,
@@ -215,7 +214,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
         normalized_value =
           case {field_name, value} do
-            {field, ""} when field in [:item_identifier, :fair_market_value] -> nil
+            {:fair_market_value, ""} -> nil
             _ -> value
           end
 

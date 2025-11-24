@@ -28,6 +28,9 @@ defmodule Receipts.ReceiptGenerator do
     alias Receipts.Repo
     alias Receipts.LineItem
 
+    # Preload the item association
+    line_item = Repo.preload(line_item, :item)
+
     # Get total count and position for this line item (if item_id is set)
     {current_position, total_count} =
       if line_item.item_id do
@@ -48,6 +51,7 @@ defmodule Receipts.ReceiptGenerator do
       end
 
     assigns = %{
+      line_item: line_item,
       item: line_item,
       formatted_value: Number.Currency.number_to_currency(line_item.fair_market_value),
       logo_path: @logo_data_uri,
