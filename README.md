@@ -30,7 +30,17 @@ When you receive a new CSV file from Angel Charity, follow these steps:
    - Files named: `receipt_<item_id>_<short_title>.[pdf|html]` (single line item)
    - Or: `receipt_<item_id>_<n>_of_<total>_<short_title>.[pdf|html]` (multiple line items)
 
-4. **Review outputs**:
+4. **Sync to DropBox** (for sharing with collaborators):
+
+   ```bash
+   mix sync_receipts
+   ```
+
+   - Syncs `receipts/pdf/` to shared DropBox folder
+   - Uses rsync for efficient incremental transfers
+   - Removes files from DropBox that no longer exist locally
+
+5. **Review outputs**:
    - Check `receipts/pdf/` for printable PDFs
    - Check `receipts/html/` for web-viewable versions
 
