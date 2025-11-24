@@ -1,12 +1,12 @@
 defmodule Mix.Tasks.GenerateReceipts do
   use Mix.Task
-  alias Receipts.AuctionItem
+  alias Receipts.LineItem
   alias Receipts.ReceiptGenerator
   alias Receipts.ChromicPDFHelper
   alias Receipts.Config
   alias Receipts.Repo
 
-  @shortdoc "Generate PDF receipts for all auction items"
+  @shortdoc "Generate PDF receipts for all line items"
 
   def run(_args) do
     Application.ensure_all_started(:receipts)
@@ -18,16 +18,16 @@ defmodule Mix.Tasks.GenerateReceipts do
     File.mkdir_p!(pdf_dir)
     File.mkdir_p!(html_dir)
 
-    items = Repo.all(AuctionItem)
-    total = length(items)
+    line_items = Repo.all(LineItem)
+    total = length(line_items)
 
-    Mix.shell().info("Generating receipts for #{total} auction items...")
+    Mix.shell().info("Generating receipts for #{total} line items...")
 
     results =
-      items
+      line_items
       |> Enum.with_index(1)
-      |> Enum.map(fn {item, index} ->
-        generate_receipt(item, index, total, pdf_dir, html_dir)
+      |> Enum.map(fn {line_item, index} ->
+        generate_receipt(line_item, index, total, pdf_dir, html_dir)
       end)
 
     successful = Enum.count(results, fn result -> result == :ok end)
@@ -41,20 +41,20 @@ defmodule Mix.Tasks.GenerateReceipts do
     end
   end
 
-  defp generate_receipt(item, index, total, pdf_dir, html_dir) do
-    snake_case_title = to_snake_case(item.short_title)
-    base_filename = "receipt_#{item.item_id}_#{snake_case_title}"
+  defp generate_receipt(line_item, index, total, pdf_dir, html_dir) do
+    snake_case_title = to_snake_case(line_item.short_title)
+    base_filename = "receipt_#{line_item.item_identifier}_#{line_item.id}_#{snake_case_title}"
     pdf_path = Path.join(pdf_dir, "#{base_filename}.pdf")
     html_path = Path.join(html_dir, "#{base_filename}.html")
 
-    Mix.shell().info("[#{index}/#{total}] Generating receipt for item ##{item.item_id}...")
+    Mix.shell().info("[#{index}/#{total}] Generating receipt for item ##{line_item.item_identifier} (line item #{line_item.id})...")
 
-    with :ok <- ReceiptGenerator.generate_pdf(item, pdf_path),
-         :ok <- ReceiptGenerator.save_html(item, html_path) do
+    with :ok <- ReceiptGenerator.generate_pdf(line_item, pdf_path),
+         :ok <- ReceiptGenerator.save_html(line_item, html_path) do
       :ok
     else
       {:error, reason} ->
-        Mix.shell().error("Failed to generate receipt for item ##{item.item_id}: #{inspect(reason)}")
+        Mix.shell().error("Failed to generate receipt for line item ##{line_item.id}: #{inspect(reason)}")
         :error
     end
   end
