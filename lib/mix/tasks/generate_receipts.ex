@@ -42,11 +42,14 @@ defmodule Mix.Tasks.GenerateReceipts do
   end
 
   defp generate_receipt(line_item, index, total, pdf_dir, html_dir) do
+    # Preload item for display
+    line_item = Repo.preload(line_item, :item)
+
     base_filename = LineItem.receipt_filename(line_item)
     pdf_path = Path.join(pdf_dir, "#{base_filename}.pdf")
     html_path = Path.join(html_dir, "#{base_filename}.html")
 
-    Mix.shell().info("[#{index}/#{total}] Generating receipt for item ##{line_item.item_identifier} (line item #{line_item.id})...")
+    Mix.shell().info("[#{index}/#{total}] Generating receipt for item ##{line_item.item.item_identifier} (line item #{line_item.id})...")
 
     with :ok <- ReceiptGenerator.generate_pdf(line_item, pdf_path),
          :ok <- ReceiptGenerator.save_html(line_item, html_path) do
