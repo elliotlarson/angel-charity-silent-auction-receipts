@@ -1,17 +1,20 @@
 defmodule Mix.Tasks.ProcessAuctionItems do
   use Mix.Task
 
-  alias Receipts.AuctionItem
+  alias Receipts.Item
+  alias Receipts.LineItem
   alias Receipts.AIDescriptionProcessor
   alias Receipts.Config
   alias Receipts.Repo
+
+  import Ecto.Query
 
   NimbleCSV.define(CSVParser, separator: ",", escape: "\"")
 
   @shortdoc "Process auction items CSV files and save to database"
 
   @field_mappings %{
-    "ITEM ID" => :item_id,
+    "ITEM ID" => :item_identifier,
     "CATEGORIES (OPTIONAL)" => :categories,
     "15 CHARACTER DESCRIPTION" => :short_title,
     "100 CHARACTER DESCRIPTION" => :title,
@@ -20,11 +23,9 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   }
 
   def run(args) do
-    # Start required applications
     Application.ensure_all_started(:receipts)
     Application.ensure_all_started(:req)
 
-    # Load .env file if it exists
     if File.exists?(".env") do
       {:ok, vars} = Dotenvy.source(".env")
       Enum.each(vars, fn {k, v} -> System.put_env(k, v) end)
@@ -90,8 +91,12 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     |> read_and_parse_csv()
     |> process_rows(opts)
 
+    item_count = Repo.aggregate(Item, :count)
+    line_item_count = Repo.aggregate(LineItem, :count)
+
     Mix.shell().info("\nProcessing complete!")
-    Mix.shell().info("Total items in database: #{Repo.aggregate(AuctionItem, :count)}")
+    Mix.shell().info("Total items in database: #{item_count}")
+    Mix.shell().info("Total line items in database: #{line_item_count}")
   end
 
   @doc false
@@ -109,18 +114,19 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     total = length(valid_rows)
     skip_ai = Keyword.get(opts, :skip_ai_processing, false)
 
-    stats = %{new: 0, updated: 0, skipped: 0}
+    stats = %{new_items: 0, new_line_items: 0, updated: 0, skipped: 0}
 
     stats =
       valid_rows
       |> Enum.with_index(1)
-      |> Enum.reduce(stats, fn {row, index} ->
-        process_row(row, headers, index, total, skip_ai, stats)
+      |> Enum.reduce(stats, fn {row, index}, acc ->
+        process_row(row, headers, index, total, skip_ai, acc)
       end)
 
     Mix.shell().info("\nSummary:")
-    Mix.shell().info("  New items: #{stats.new}")
-    Mix.shell().info("  Updated items: #{stats.updated}")
+    Mix.shell().info("  New items: #{stats.new_items}")
+    Mix.shell().info("  New line items: #{stats.new_line_items}")
+    Mix.shell().info("  Updated line items: #{stats.updated}")
     Mix.shell().info("  Skipped (unchanged): #{stats.skipped}")
 
     stats
@@ -130,32 +136,47 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     csv_raw_line = Enum.join(row, ",")
     csv_row_hash = hash_csv_row(csv_raw_line)
 
-    item_id_str = get_column(row, find_header_index(headers, "ITEM ID"))
-    item_id = String.to_integer(item_id_str)
+    item_identifier_str = get_column(row, find_header_index(headers, "ITEM ID"))
+    item_identifier = String.to_integer(item_identifier_str)
 
-    existing = Repo.get_by(AuctionItem, item_id: item_id)
+    # Find or create Item
+    {item, item_created} = find_or_create_item(item_identifier)
+
+    # Check for existing line item by csv_row_hash
+    existing_line_item =
+      Repo.one(
+        from li in LineItem,
+          where: li.item_id == ^item.id and li.csv_row_hash == ^csv_row_hash
+      )
+
+    stats = if item_created, do: %{stats | new_items: stats.new_items + 1}, else: stats
 
     cond do
-      is_nil(existing) ->
-        # New item - process and insert
-        attrs = build_attrs(row, headers, csv_row_hash, csv_raw_line, skip_ai: skip_ai)
-        changeset = AuctionItem.changeset(%AuctionItem{}, attrs)
-        {:ok, _item} = Repo.insert(changeset)
-        Mix.shell().info("[#{index}/#{total}] Created item ##{item_id}")
-        %{stats | new: stats.new + 1}
-
-      existing.csv_row_hash == csv_row_hash ->
-        # Unchanged - skip processing
-        Mix.shell().info("[#{index}/#{total}] Skipped item ##{item_id} (unchanged)")
+      not is_nil(existing_line_item) ->
+        Mix.shell().info("[#{index}/#{total}] Skipped line item for ##{item_identifier} (unchanged)")
         %{stats | skipped: stats.skipped + 1}
 
       true ->
-        # Changed - reprocess and update
-        attrs = build_attrs(row, headers, csv_row_hash, csv_raw_line, skip_ai: skip_ai)
-        changeset = AuctionItem.changeset(existing, attrs)
-        {:ok, _item} = Repo.update(changeset)
-        Mix.shell().info("[#{index}/#{total}] Updated item ##{item_id}")
-        %{stats | updated: stats.updated + 1}
+        # New line item - process and insert
+        attrs = build_attrs(row, headers, csv_row_hash, csv_raw_line, item.id, skip_ai: skip_ai)
+        changeset = LineItem.changeset(%LineItem{}, attrs)
+        {:ok, _line_item} = Repo.insert(changeset)
+        Mix.shell().info("[#{index}/#{total}] Created line item for ##{item_identifier}")
+        %{stats | new_line_items: stats.new_line_items + 1}
+    end
+  end
+
+  defp find_or_create_item(item_identifier) do
+    case Repo.get_by(Item, item_identifier: item_identifier) do
+      nil ->
+        {:ok, item} =
+          %Item{}
+          |> Item.changeset(%{item_identifier: item_identifier})
+          |> Repo.insert()
+        {item, true}
+
+      item ->
+        {item, false}
     end
   end
 
@@ -180,7 +201,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     |> String.trim()
   end
 
-  defp build_attrs(row, headers, csv_row_hash, csv_raw_line, opts) do
+  defp build_attrs(row, headers, csv_row_hash, csv_raw_line, item_id, opts) do
     attrs =
       @field_mappings
       |> Enum.reduce(%{}, fn {header, field_name}, acc ->
@@ -190,10 +211,9 @@ defmodule Mix.Tasks.ProcessAuctionItems do
             index -> get_column(row, index)
           end
 
-        # Convert empty strings to nil for integer fields so Ecto defaults apply
         normalized_value =
           case {field_name, value} do
-            {field, ""} when field in [:item_id, :fair_market_value] -> nil
+            {field, ""} when field in [:item_identifier, :fair_market_value] -> nil
             _ -> value
           end
 
@@ -201,6 +221,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
       end)
 
     attrs
+    |> Map.put(:item_id, item_id)
     |> Map.put(:csv_row_hash, csv_row_hash)
     |> Map.put(:csv_raw_line, csv_raw_line)
     |> AIDescriptionProcessor.process(opts)
