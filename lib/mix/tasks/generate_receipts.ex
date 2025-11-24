@@ -21,6 +21,8 @@ defmodule Mix.Tasks.GenerateReceipts do
     line_items = Repo.all(LineItem)
     total = length(line_items)
 
+    cleanup_orphan_files(line_items, pdf_dir, html_dir)
+
     Mix.shell().info("Generating receipts for #{total} line items...")
 
     results =
@@ -49,15 +51,50 @@ defmodule Mix.Tasks.GenerateReceipts do
     pdf_path = Path.join(pdf_dir, "#{base_filename}.pdf")
     html_path = Path.join(html_dir, "#{base_filename}.html")
 
-    Mix.shell().info("[#{index}/#{total}] Generating receipt for item ##{line_item.item.item_identifier} (line item #{line_item.id})...")
+    Mix.shell().info(
+      "[#{index}/#{total}] Generating receipt for item ##{line_item.item.item_identifier} (line item #{line_item.id})..."
+    )
 
     with :ok <- ReceiptGenerator.generate_pdf(line_item, pdf_path),
          :ok <- ReceiptGenerator.save_html(line_item, html_path) do
       :ok
     else
       {:error, reason} ->
-        Mix.shell().error("Failed to generate receipt for line item ##{line_item.id}: #{inspect(reason)}")
+        Mix.shell().error(
+          "Failed to generate receipt for line item ##{line_item.id}: #{inspect(reason)}"
+        )
+
         :error
+    end
+  end
+
+  defp cleanup_orphan_files(line_items, pdf_dir, html_dir) do
+    expected_basenames =
+      line_items
+      |> Enum.map(&LineItem.receipt_filename/1)
+      |> MapSet.new()
+
+    cleanup_directory(pdf_dir, expected_basenames, ".pdf")
+    cleanup_directory(html_dir, expected_basenames, ".html")
+  end
+
+  defp cleanup_directory(dir, expected_basenames, extension) do
+    case File.ls(dir) do
+      {:ok, files} ->
+        files
+        |> Enum.filter(&String.ends_with?(&1, extension))
+        |> Enum.reject(fn file ->
+          basename = String.replace_suffix(file, extension, "")
+          MapSet.member?(expected_basenames, basename)
+        end)
+        |> Enum.each(fn file ->
+          path = Path.join(dir, file)
+          Mix.shell().info("Removing orphan file: #{file}")
+          File.rm!(path)
+        end)
+
+      {:error, :enoent} ->
+        :ok
     end
   end
 end
