@@ -17,7 +17,7 @@ defmodule Receipts.LineItemTest do
       %{
         item_id: item.id,
         item_identifier: item.item_identifier,
-        identifier: "a",
+        identifier: 1,
         csv_row_hash: "abc123",
         csv_raw_line: "103,HOME,Landscaping,One Year Monthly Landscaping Services,..."
       },
@@ -87,42 +87,42 @@ defmodule Receipts.LineItemTest do
   end
 
   describe "next_identifier/1" do
-    test "returns 'a' when no line items exist for item" do
+    test "returns 1 when no line items exist for item" do
       item = create_item(999)
-      assert LineItem.next_identifier(item.id) == "a"
+      assert LineItem.next_identifier(item.id) == 1
     end
 
-    test "returns 'b' when one line item exists" do
+    test "returns 2 when one line item exists" do
       item = create_item(100)
       Repo.insert!(%LineItem{
         item_id: item.id,
         item_identifier: item.item_identifier,
-        identifier: "a",
+        identifier: 1,
         csv_row_hash: "hash1",
         csv_raw_line: "raw1"
       })
 
-      assert LineItem.next_identifier(item.id) == "b"
+      assert LineItem.next_identifier(item.id) == 2
     end
 
-    test "returns 'c' when two line items exist" do
+    test "returns 3 when two line items exist" do
       item = create_item(101)
       Repo.insert!(%LineItem{
         item_id: item.id,
         item_identifier: item.item_identifier,
-        identifier: "a",
+        identifier: 1,
         csv_row_hash: "hash1",
         csv_raw_line: "raw1"
       })
       Repo.insert!(%LineItem{
         item_id: item.id,
         item_identifier: item.item_identifier,
-        identifier: "b",
+        identifier: 2,
         csv_row_hash: "hash2",
         csv_raw_line: "raw2"
       })
 
-      assert LineItem.next_identifier(item.id) == "c"
+      assert LineItem.next_identifier(item.id) == 3
     end
   end
 

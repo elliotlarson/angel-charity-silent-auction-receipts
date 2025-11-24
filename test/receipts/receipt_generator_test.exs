@@ -7,7 +7,7 @@ defmodule Receipts.ReceiptGeneratorTest do
     Map.merge(
       %LineItem{
         item_identifier: 1,
-        identifier: "a",
+        identifier: 1,
         title: "Test",
         short_title: "Test",
         description: "<p>Test</p>",
@@ -70,7 +70,7 @@ defmodule Receipts.ReceiptGeneratorTest do
 
       html = ReceiptGenerator.render_html(line_item)
 
-      assert html =~ "Item #103a"
+      assert html =~ "Item #103"
       assert html =~ "One Year Monthly Landscaping Services"
       assert html =~ "<p>Professional landscaping services.</p>"
       assert html =~ "$1,200.00"

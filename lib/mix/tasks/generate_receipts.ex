@@ -42,8 +42,7 @@ defmodule Mix.Tasks.GenerateReceipts do
   end
 
   defp generate_receipt(line_item, index, total, pdf_dir, html_dir) do
-    snake_case_title = to_snake_case(line_item.short_title)
-    base_filename = "receipt_#{line_item.item_identifier}_#{line_item.id}_#{snake_case_title}"
+    base_filename = LineItem.receipt_filename(line_item)
     pdf_path = Path.join(pdf_dir, "#{base_filename}.pdf")
     html_path = Path.join(html_dir, "#{base_filename}.html")
 
@@ -57,12 +56,5 @@ defmodule Mix.Tasks.GenerateReceipts do
         Mix.shell().error("Failed to generate receipt for line item ##{line_item.id}: #{inspect(reason)}")
         :error
     end
-  end
-
-  defp to_snake_case(string) do
-    string
-    |> String.downcase()
-    |> String.replace(~r/[^a-z0-9]+/, "_")
-    |> String.trim("_")
   end
 end

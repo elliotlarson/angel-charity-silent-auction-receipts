@@ -7,7 +7,7 @@ defmodule Receipts.LineItem do
   @derive Jason.Encoder
   schema "line_items" do
     field :item_identifier, :integer
-    field :identifier, :string
+    field :identifier, :integer
     field :short_title, :string
     field :title, :string
     field :description, :string
@@ -95,13 +95,13 @@ defmodule Receipts.LineItem do
   end
 
   @doc """
-  Returns the next available letter identifier for a given item.
-  Queries existing line items for the item and returns the next letter in sequence.
+  Returns the next available numeric identifier for a given item.
+  Queries existing line items for the item and returns the next number in sequence.
 
   Examples:
-    - No existing line items: returns "a"
-    - Existing line items with "a": returns "b"
-    - Existing line items with "a", "b": returns "c"
+    - No existing line items: returns 1
+    - Existing line items with 1: returns 2
+    - Existing line items with 1, 2: returns 3
   """
   def next_identifier(item_id) do
     import Ecto.Query
@@ -115,8 +115,46 @@ defmodule Receipts.LineItem do
       |> Repo.one()
 
     case max_identifier do
-      nil -> "a"
-      identifier -> String.to_charlist(identifier) |> hd() |> Kernel.+(1) |> List.wrap() |> to_string()
+      nil -> 1
+      identifier -> identifier + 1
+    end
+  end
+
+  @doc """
+  Returns the total count of line items for this line item's parent item.
+  Used to determine if we should include "X of Y" in filenames and display.
+  """
+  def count_for_item(item_id) do
+    import Ecto.Query
+    alias Receipts.Repo
+
+    from(li in __MODULE__,
+      where: li.item_id == ^item_id,
+      select: count(li.id)
+    )
+    |> Repo.one()
+  end
+
+  @doc """
+  Generates the base filename for receipts.
+
+  Examples:
+    - Single line item: "receipt_103_landscaping"
+    - Multiple line items: "receipt_139_1_of_3_ac_hotel"
+  """
+  def receipt_filename(line_item) do
+    snake_case_title =
+      line_item.short_title
+      |> String.downcase()
+      |> String.replace(~r/[^a-z0-9]+/, "_")
+      |> String.trim("_")
+
+    total = count_for_item(line_item.item_id)
+
+    if total > 1 do
+      "receipt_#{line_item.item_identifier}_#{line_item.identifier}_of_#{total}_#{snake_case_title}"
+    else
+      "receipt_#{line_item.item_identifier}_#{snake_case_title}"
     end
   end
 end

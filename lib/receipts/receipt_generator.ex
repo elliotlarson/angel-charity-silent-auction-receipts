@@ -23,11 +23,36 @@ defmodule Receipts.ReceiptGenerator do
     File.write(output_path, html)
   end
 
-  def render_html(auction_item) do
+  def render_html(line_item) do
+    import Ecto.Query
+    alias Receipts.Repo
+    alias Receipts.LineItem
+
+    # Get total count and position for this line item (if item_id is set)
+    {current_position, total_count} =
+      if line_item.item_id do
+        line_items_for_item =
+          from(li in LineItem,
+            where: li.item_id == ^line_item.item_id,
+            order_by: [asc: li.identifier],
+            select: li.identifier
+          )
+          |> Repo.all()
+
+        total = length(line_items_for_item)
+        position = Enum.find_index(line_items_for_item, &(&1 == line_item.identifier)) + 1
+        {position, total}
+      else
+        # For test structs without item_id, assume single line item
+        {1, 1}
+      end
+
     assigns = %{
-      item: auction_item,
-      formatted_value: Number.Currency.number_to_currency(auction_item.fair_market_value),
-      logo_path: @logo_data_uri
+      item: line_item,
+      formatted_value: Number.Currency.number_to_currency(line_item.fair_market_value),
+      logo_path: @logo_data_uri,
+      line_item_position: current_position,
+      line_item_total: total_count
     }
 
     EEx.eval_string(@template, assigns: assigns)

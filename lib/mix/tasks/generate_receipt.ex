@@ -63,8 +63,7 @@ defmodule Mix.Tasks.GenerateReceipt do
         exit({:shutdown, 1})
 
       line_item ->
-        snake_case_title = to_snake_case(line_item.short_title)
-        base_filename = "receipt_#{line_item.item_identifier}_#{line_item.id}_#{snake_case_title}"
+        base_filename = LineItem.receipt_filename(line_item)
         pdf_path = Path.join(pdf_dir, "#{base_filename}.pdf")
         html_path = Path.join(html_dir, "#{base_filename}.html")
 
@@ -81,12 +80,5 @@ defmodule Mix.Tasks.GenerateReceipt do
             exit({:shutdown, 1})
         end
     end
-  end
-
-  defp to_snake_case(string) do
-    string
-    |> String.downcase()
-    |> String.replace(~r/[^a-z0-9]+/, "_")
-    |> String.trim("_")
   end
 end
