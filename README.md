@@ -24,10 +24,11 @@ When you receive a new CSV file from Angel Charity, follow these steps:
    mix generate_receipts
    ```
 
-   - Reads all items from database
+   - Reads all line items from database
    - Generates PDFs in `receipts/pdf/`
    - Generates HTML in `receipts/html/`
-   - Files named: `receipt_<id>_<short_title>.[pdf|html]`
+   - Files named: `receipt_<item_id>_<short_title>.[pdf|html]` (single line item)
+   - Or: `receipt_<item_id>_<n>_of_<total>_<short_title>.[pdf|html]` (multiple line items)
 
 4. **Review outputs**:
    - Check `receipts/pdf/` for printable PDFs
@@ -35,7 +36,12 @@ When you receive a new CSV file from Angel Charity, follow these steps:
 
 ## Processing Auction Items
 
-This project includes a Mix task for processing auction item CSV files and storing them in a SQLite database with AI-powered field extraction and intelligent change detection.
+This project uses a normalized Item/LineItem data model where:
+- **Items** represent unique auction packages (e.g., Item #139)
+- **LineItems** represent individual offerings within an item (e.g., different package options)
+- Some items have multiple line items (e.g., hotel packages with different add-ons)
+
+The Mix task processes auction item CSV files and stores them in a SQLite database with AI-powered field extraction and intelligent change detection.
 
 ### Setup
 
@@ -59,17 +65,19 @@ mix process_auction_items --skip-ai-processing
 
 The task will:
 
-1. Display a list of available CSV files in `db/auction_items/csv/`
+1. Display a list of available CSV files in `db/auction_items_source_data/`
 2. Prompt you to select a file by number
-3. Process the CSV file:
-   - Compute SHA256 hash of each CSV row for change detection
-   - Check database for existing items
-   - Skip unchanged items (saves AI processing time and cost)
-   - Process new or changed items with AI extraction
-   - Filter out placeholder rows (items with zero or empty ID or Fair Market Value)
-   - **Use AI to extract expiration dates and special notes from descriptions**
-   - Show progress for each item processed
-4. Save the processed data to SQLite database in `db/receipts_dev.db`
+3. Process the CSV file with intelligent change detection:
+   - Creates new items and line items
+   - Updates existing line items if CSV data changed (with AI reprocessing)
+   - Skips unchanged line items (saves AI processing time and cost)
+   - Deletes line items no longer in CSV
+   - Deletes items that have no line items
+   - Computes SHA256 hash of each CSV row for change detection
+   - Filters out placeholder rows (items with zero or empty ID or Fair Market Value)
+   - **Uses AI to extract expiration dates and special notes from descriptions**
+   - Shows progress for each item processed
+4. Saves the processed data to SQLite database in `db/receipts_dev.db`
 
 ### AI Processing
 
@@ -86,11 +94,13 @@ The task uses Claude (Anthropic API) to intelligently extract:
 - ✅ **Graceful** - Falls back to original description if extraction fails
 - ✅ **Progress tracking** - Shows "Processed item X/Y (ID: ###)" as it works
 
-### Extracted Fields
+### Data Model
 
-The following fields are extracted from each auction item:
+**Items table:**
+- `item_identifier` - Business ID from CSV (e.g., 103, 139)
 
-- `item_id` - Item ID
+**LineItems table (one row per CSV row):**
+- `identifier` - Position within item (1, 2, 3 for multiple line items)
 - `short_title` - 15 character description
 - `title` - 100 character description
 - `description` - 1500 character description (cleaned by AI if processing enabled)
@@ -98,6 +108,8 @@ The following fields are extracted from each auction item:
 - `categories` - Item categories
 - `expiration_notice` - Expiration dates/notices extracted by AI
 - `notes` - Special instructions extracted by AI
+- `csv_row_hash` - SHA256 hash for change detection
+- `csv_raw_line` - Original CSV row for audit
 
 ### Example
 
@@ -107,18 +119,23 @@ Available CSV files:
   1. 20251121_auction_items.csv
 Select file number: 1
 Processing 20251121_auction_items.csv...
-[1/137] Created item #103
-[2/137] Created item #104
-[3/137] Skipped item #105 (unchanged)
+[1/137] Created line item for #103
+[2/137] Created line item for #104
+[3/137] Skipped line item for #105 (unchanged)
+[4/137] Updated line item for #106
 ...
 
 Summary:
-  New items: 5
-  Updated items: 2
-  Skipped (unchanged): 130
+  New items: 3
+  New line items: 5
+  Updated line items: 2
+  Skipped (unchanged): 127
+  Deleted items: 0
+  Deleted line items: 0
 
 Processing complete!
-Total items in database: 137
+Total items in database: 122
+Total line items in database: 137
 ```
 
 ## Generating Receipts
@@ -131,9 +148,9 @@ mix generate_receipts
 
 The task will:
 
-1. Read all auction items from the database
-2. Generate a PDF receipt for each item in `receipts/pdf/`
-3. Generate an HTML receipt for each item in `receipts/html/`
+1. Read all line items from the database (one receipt per line item)
+2. Generate a PDF receipt for each line item in `receipts/pdf/`
+3. Generate an HTML receipt for each line item in `receipts/html/`
 4. Display progress for each receipt
 5. Show a summary when complete
 
@@ -142,26 +159,31 @@ The task will:
 ```
 receipts/
   pdf/
-    receipt_103_landscaping.pdf
-    receipt_104_show_stopper.pdf
+    receipt_103_landscaping.pdf              # Single line item
+    receipt_139_1_of_3_ac_hotel.pdf          # Multiple line items
+    receipt_139_2_of_3_ac_hotel_el_charro.pdf
+    receipt_139_3_of_3_ac_hotel_forbes.pdf
     ...
   html/
     receipt_103_landscaping.html
-    receipt_104_show_stopper.html
+    receipt_139_1_of_3_ac_hotel.html
     ...
 ```
 
-Files are named: `receipt_<item_id>_<short_title_in_snake_case>.[pdf|html]`
+**Filename format:**
+- Single line item: `receipt_<item_id>_<short_title>.[pdf|html]`
+- Multiple line items: `receipt_<item_id>_<n>_of_<total>_<short_title>.[pdf|html]`
 
 ### Example
 
 ```bash
 $ mix generate_receipts
-Generating receipts for 137 auction items...
-[1/137] Generating receipt for item #103...
-[2/137] Generating receipt for item #104...
+Generating receipts for 137 line items...
+[1/137] Generating receipt for item #103 (line item 1)...
+[2/137] Generating receipt for item #104 (line item 2)...
+[3/137] Generating receipt for item #139 (line item 38)...
 ...
-[137/137] Generating receipt for item #240...
+[137/137] Generating receipt for item #240 (line item 137)...
 
 Generation complete!
 Successfully generated: 137 receipts
@@ -169,14 +191,16 @@ Successfully generated: 137 receipts
 
 ### Regenerating Individual Receipts
 
-After generating receipts, you can regenerate individual items:
+After generating receipts, you can regenerate individual line items:
 
 **Regenerate from database (fresh HTML + PDF):**
 ```bash
-mix generate_receipt <item_id>
+mix generate_receipt <line_item_id>
 ```
 
-This reads the current data from the database and generates fresh HTML and PDF files. Useful when you've updated an item's data in the database.
+This reads the current data from the database and generates fresh HTML and PDF files. Useful when you've updated a line item's data in the database.
+
+**Note:** Use the line item's database ID, not the item identifier. You can find line item IDs by querying the database or checking the filenames.
 
 **Regenerate PDF from edited HTML:**
 ```bash
@@ -189,13 +213,13 @@ This regenerates only the PDF from an existing HTML file. Useful when you've man
 
 ```bash
 # 1. Edit the HTML file to fix layout
-vim receipts/html/receipt_120_belize.html
+vim receipts/html/receipt_139_2_of_3_el_charro.html
 
 # 2. Regenerate just the PDF from edited HTML
-$ mix regenerate_receipt_pdf 120
-Reading HTML from: receipts/html/receipt_120_belize.html
-Generating PDF to: receipts/pdf/receipt_120_belize.pdf
-✓ Successfully regenerated PDF for item #120
+$ mix regenerate_receipt_pdf 139
+Reading HTML from: receipts/html/receipt_139_2_of_3_el_charro.html
+Generating PDF to: receipts/pdf/receipt_139_2_of_3_el_charro.pdf
+Successfully regenerated PDF for item #139
 ```
 
 ## Development
