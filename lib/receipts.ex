@@ -4,7 +4,8 @@ defmodule Receipts do
 
   ## Main Components
 
-  - `Receipts.AuctionItem` - Data model for auction items with validation
+  - `Receipts.Item` - Data model for auction items
+  - `Receipts.LineItem` - Data model for line items within auction items
   - `Receipts.ReceiptGenerator` - Generates PDF and HTML receipts
   - `Receipts.AIDescriptionProcessor` - Extracts metadata using AI
   - `Receipts.ProcessingCache` - Caches AI processing results
