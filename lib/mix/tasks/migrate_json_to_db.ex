@@ -1,7 +1,8 @@
 defmodule Mix.Tasks.MigrateJsonToDb do
   use Mix.Task
 
-  alias Receipts.AuctionItem
+  alias Receipts.Item
+  alias Receipts.LineItem
   alias Receipts.Config
   alias Receipts.Repo
 
@@ -48,55 +49,57 @@ defmodule Mix.Tasks.MigrateJsonToDb do
   end
 
   defp import_files(files, json_dir, csv_dir) do
-    stats = %{imported: 0, skipped: 0, no_csv: 0}
+    stats = %{items_created: 0, line_items_imported: 0, skipped: 0, no_csv: 0}
 
     final_stats =
       Enum.reduce(files, stats, fn filename, acc ->
         Mix.shell().info("\nProcessing #{filename}...")
 
-        # Find corresponding CSV file
         csv_filename = String.replace_suffix(filename, ".json", ".csv")
         csv_path = Path.join(csv_dir, csv_filename)
 
         csv_row_map =
           if File.exists?(csv_path) do
             map = build_csv_row_map(csv_path)
-            Mix.shell().info("  Found CSV file with #{map_size(map)} items")
+            Mix.shell().info("  Found CSV file with #{map_size(map)} rows")
             map
           else
             Mix.shell().info("  Warning: CSV file #{csv_filename} not found, using placeholder hashes")
             %{}
           end
 
-        # Load JSON items
         json_path = Path.join(json_dir, filename)
         {:ok, content} = File.read(json_path)
         {:ok, items_data} = Jason.decode(content)
 
         Enum.reduce(items_data, acc, fn item_data, acc_inner ->
-          item_id = item_data["item_id"]
+          item_identifier = item_data["item_id"]
+
+          # Find or create Item
+          {item, item_created} = find_or_create_item(item_identifier)
+          acc_inner = if item_created, do: %{acc_inner | items_created: acc_inner.items_created + 1}, else: acc_inner
 
           {csv_row_hash, csv_raw_line} =
-            case Map.get(csv_row_map, item_id) do
-              {hash, raw_line} ->
-                {hash, raw_line}
-              nil ->
-                # CSV not found or item not in CSV - use placeholder
-                {"migrated_from_json", "migrated_from_json"}
+            case Map.get(csv_row_map, item_identifier) do
+              nil -> {"migrated_from_json", "migrated_from_json"}
+              entries when is_list(entries) -> hd(entries)
             end
 
           attrs =
             item_data
+            |> Map.put("item_id", item.id)
+            |> Map.put("item_identifier", item_identifier)
             |> Map.put("csv_row_hash", csv_row_hash)
             |> Map.put("csv_raw_line", csv_raw_line)
 
-          case Repo.get_by(AuctionItem, item_id: attrs["item_id"]) do
+          # Check if line item already exists
+          case Repo.get_by(LineItem, item_id: item.id, csv_row_hash: csv_row_hash) do
             nil ->
-              %AuctionItem{}
-              |> AuctionItem.changeset(attrs)
+              %LineItem{}
+              |> LineItem.changeset(attrs)
               |> Repo.insert!()
 
-              new_acc = %{acc_inner | imported: acc_inner.imported + 1}
+              new_acc = %{acc_inner | line_items_imported: acc_inner.line_items_imported + 1}
               if csv_row_hash == "migrated_from_json" do
                 %{new_acc | no_csv: new_acc.no_csv + 1}
               else
@@ -104,22 +107,38 @@ defmodule Mix.Tasks.MigrateJsonToDb do
               end
 
             _existing ->
-              Mix.shell().info("  Skipped item ##{attrs["item_id"]} (already exists)")
+              Mix.shell().info("  Skipped line item for ##{item_identifier} (already exists)")
               %{acc_inner | skipped: acc_inner.skipped + 1}
           end
         end)
       end)
 
     Mix.shell().info("\nMigration complete!")
-    Mix.shell().info("Imported: #{final_stats.imported} items")
-    Mix.shell().info("Skipped: #{final_stats.skipped} items (already in database)")
+    Mix.shell().info("Items created: #{final_stats.items_created}")
+    Mix.shell().info("Line items imported: #{final_stats.line_items_imported}")
+    Mix.shell().info("Skipped: #{final_stats.skipped} (already in database)")
 
     if final_stats.no_csv > 0 do
-      Mix.shell().info("Warning: #{final_stats.no_csv} items imported without CSV hash (will be updated on next CSV processing)")
+      Mix.shell().info("Warning: #{final_stats.no_csv} items imported without CSV hash")
+    end
+  end
+
+  defp find_or_create_item(item_identifier) do
+    case Repo.get_by(Item, item_identifier: item_identifier) do
+      nil ->
+        {:ok, item} =
+          %Item{}
+          |> Item.changeset(%{item_identifier: item_identifier})
+          |> Repo.insert()
+        {item, true}
+
+      item ->
+        {item, false}
     end
   end
 
   defp build_csv_row_map(csv_path) do
+    # Build map of item_identifier => [{hash, raw_line}, ...] to handle duplicates
     rows =
       csv_path
       |> File.stream!()
@@ -128,7 +147,6 @@ defmodule Mix.Tasks.MigrateJsonToDb do
 
     case rows do
       [_title_row, headers, _empty_row | data_rows] ->
-        # Find item_id column index
         item_id_index =
           headers
           |> Enum.find_index(fn header ->
@@ -139,7 +157,6 @@ defmodule Mix.Tasks.MigrateJsonToDb do
           Mix.shell().info("  Warning: ITEM ID column not found in CSV headers")
           %{}
         else
-          # Build map of item_id => {hash, raw_line}
           Enum.reduce(data_rows, %{}, fn row, acc ->
             csv_raw_line = Enum.join(row, ",")
             csv_row_hash = hash_csv_row(csv_raw_line)
@@ -152,7 +169,8 @@ defmodule Mix.Tasks.MigrateJsonToDb do
 
             case Integer.parse(item_id_str) do
               {item_id, _} when item_id > 0 ->
-                Map.put(acc, item_id, {csv_row_hash, csv_raw_line})
+                existing = Map.get(acc, item_id, [])
+                Map.put(acc, item_id, [{csv_row_hash, csv_raw_line} | existing])
 
               _ ->
                 acc
