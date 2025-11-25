@@ -28,8 +28,13 @@ defmodule Receipts.ReceiptGenerator do
     alias Receipts.Repo
     alias Receipts.LineItem
 
-    # Preload the item association
-    line_item = Repo.preload(line_item, :item)
+    # Preload the item association if not already loaded
+    line_item =
+      if Ecto.assoc_loaded?(line_item.item) do
+        line_item
+      else
+        Repo.preload(line_item, :item)
+      end
 
     # Get total count and position for this line item (if item_id is set)
     {current_position, total_count} =

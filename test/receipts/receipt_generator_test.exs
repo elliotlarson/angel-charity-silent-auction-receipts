@@ -5,8 +5,8 @@ defmodule Receipts.ReceiptGeneratorTest do
   alias Receipts.Item
 
   defp test_line_item(overrides) do
-    # Create a mock item association
-    item = %Item{id: nil, item_identifier: 1}
+    # Create a mock item association (item_id nil to skip DB queries)
+    item = %Item{id: 1, item_identifier: 1}
 
     Map.merge(
       %LineItem{
@@ -62,7 +62,7 @@ defmodule Receipts.ReceiptGeneratorTest do
 
   describe "render_html/1" do
     test "renders receipt template with line item data" do
-      item = %Item{id: nil, item_identifier: 103}
+      item = %Item{id: 103, item_identifier: 103}
 
       line_item =
         test_line_item(%{
@@ -85,7 +85,7 @@ defmodule Receipts.ReceiptGeneratorTest do
     end
 
     test "handles empty notes field" do
-      item = %Item{id: nil, item_identifier: 104}
+      item = %Item{id: 104, item_identifier: 104}
 
       line_item =
         test_line_item(%{
@@ -105,7 +105,7 @@ defmodule Receipts.ReceiptGeneratorTest do
     end
 
     test "formats large currency values with commas" do
-      item = %Item{id: nil, item_identifier: 999}
+      item = %Item{id: 999, item_identifier: 999}
 
       line_item =
         test_line_item(%{
@@ -130,7 +130,7 @@ defmodule Receipts.ReceiptGeneratorTest do
     end
 
     test "generates PDF file", %{output_dir: output_dir} do
-      item = %Item{id: nil, item_identifier: 103}
+      item = %Item{id: 103, item_identifier: 103}
 
       line_item =
         test_line_item(%{
