@@ -7,6 +7,7 @@ defmodule Receipts.AIDescriptionProcessorTest do
   describe "process/2" do
     setup do
       original_key = System.get_env("ANTHROPIC_API_KEY")
+
       on_exit(fn ->
         if original_key do
           System.put_env("ANTHROPIC_API_KEY", original_key)
@@ -14,6 +15,7 @@ defmodule Receipts.AIDescriptionProcessorTest do
           System.delete_env("ANTHROPIC_API_KEY")
         end
       end)
+
       :ok
     end
 

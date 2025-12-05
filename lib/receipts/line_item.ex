@@ -6,18 +6,18 @@ defmodule Receipts.LineItem do
 
   @derive Jason.Encoder
   schema "line_items" do
-    field :identifier, :integer
-    field :short_title, :string
-    field :title, :string
-    field :description, :string
-    field :fair_market_value, :integer
-    field :categories, :string
-    field :notes, :string
-    field :expiration_notice, :string
-    field :csv_row_hash, :string
-    field :csv_raw_line, :string
+    field(:identifier, :integer)
+    field(:short_title, :string)
+    field(:title, :string)
+    field(:description, :string)
+    field(:fair_market_value, :integer)
+    field(:categories, :string)
+    field(:notes, :string)
+    field(:expiration_notice, :string)
+    field(:csv_row_hash, :string)
+    field(:csv_raw_line, :string)
 
-    belongs_to :item, Receipts.Item
+    belongs_to(:item, Receipts.Item)
 
     timestamps(type: :utc_datetime)
   end

@@ -105,7 +105,9 @@ defmodule Receipts.TextNormalizerTest do
     test "formats phone numbers to standard format" do
       assert TextNormalizer.normalize("336-601-6348") == "(336) 601-6348"
       assert TextNormalizer.normalize("520-838-2571") == "(520) 838-2571"
-      assert TextNormalizer.normalize("Call 520-577-4061 for info") == "Call (520) 577-4061 for info"
+
+      assert TextNormalizer.normalize("Call 520-577-4061 for info") ==
+               "Call (520) 577-4061 for info"
     end
 
     test "formats multiple phone numbers in text" do

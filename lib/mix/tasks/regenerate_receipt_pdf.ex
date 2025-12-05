@@ -81,9 +81,11 @@ defmodule Mix.Tasks.RegenerateReceiptPdf do
 
       multiple_files ->
         Mix.shell().error("Error: Multiple HTML files found for item ##{item_id}:")
+
         Enum.each(multiple_files, fn file ->
           Mix.shell().info("  - #{Path.relative_to_cwd(file)}")
         end)
+
         exit({:shutdown, 1})
     end
   end

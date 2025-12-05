@@ -3,8 +3,8 @@ defmodule Receipts.Item do
   import Ecto.Changeset
 
   schema "items" do
-    field :item_identifier, :integer
-    has_many :line_items, Receipts.LineItem
+    field(:item_identifier, :integer)
+    has_many(:line_items, Receipts.LineItem)
 
     timestamps(type: :utc_datetime)
   end

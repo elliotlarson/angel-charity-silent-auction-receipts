@@ -64,7 +64,10 @@ defmodule Mix.Tasks.MigrateJsonToDb do
             Mix.shell().info("  Found CSV file with #{map_size(map)} rows")
             map
           else
-            Mix.shell().info("  Warning: CSV file #{csv_filename} not found, using placeholder hashes")
+            Mix.shell().info(
+              "  Warning: CSV file #{csv_filename} not found, using placeholder hashes"
+            )
+
             %{}
           end
 
@@ -77,7 +80,11 @@ defmodule Mix.Tasks.MigrateJsonToDb do
 
           # Find or create Item
           {item, item_created} = find_or_create_item(item_identifier)
-          acc_inner = if item_created, do: %{acc_inner | items_created: acc_inner.items_created + 1}, else: acc_inner
+
+          acc_inner =
+            if item_created,
+              do: %{acc_inner | items_created: acc_inner.items_created + 1},
+              else: acc_inner
 
           {csv_row_hash, csv_raw_line} =
             case Map.get(csv_row_map, item_identifier) do
@@ -102,6 +109,7 @@ defmodule Mix.Tasks.MigrateJsonToDb do
               |> Repo.insert!()
 
               new_acc = %{acc_inner | line_items_imported: acc_inner.line_items_imported + 1}
+
               if csv_row_hash == "migrated_from_json" do
                 %{new_acc | no_csv: new_acc.no_csv + 1}
               else
@@ -132,6 +140,7 @@ defmodule Mix.Tasks.MigrateJsonToDb do
           %Item{}
           |> Item.changeset(%{item_identifier: item_identifier})
           |> Repo.insert()
+
         {item, true}
 
       item ->

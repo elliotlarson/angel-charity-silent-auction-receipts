@@ -35,10 +35,11 @@ defmodule Receipts.LineItemTest do
     end
 
     test "requires item_id" do
-      changeset = LineItem.changeset(%LineItem{}, %{
-        csv_row_hash: "abc123",
-        csv_raw_line: "raw"
-      })
+      changeset =
+        LineItem.changeset(%LineItem{}, %{
+          csv_row_hash: "abc123",
+          csv_raw_line: "raw"
+        })
 
       refute changeset.valid?
       assert %{item_id: ["can't be blank"]} = errors_on(changeset)
@@ -46,9 +47,11 @@ defmodule Receipts.LineItemTest do
 
     test "casts string integers to integers" do
       item = create_item(103)
-      attrs = sample_attrs(item, %{
-        fair_market_value: "1200"
-      })
+
+      attrs =
+        sample_attrs(item, %{
+          fair_market_value: "1200"
+        })
 
       changeset = LineItem.changeset(%LineItem{}, attrs)
 
@@ -58,11 +61,13 @@ defmodule Receipts.LineItemTest do
 
     test "normalizes text fields" do
       item = create_item(1)
-      attrs = sample_attrs(item, %{
-        short_title: "artist ,",
-        title: "services .",
-        description: "This is  a test.Good stuff !"
-      })
+
+      attrs =
+        sample_attrs(item, %{
+          short_title: "artist ,",
+          title: "services .",
+          description: "This is  a test.Good stuff !"
+        })
 
       changeset = LineItem.changeset(%LineItem{}, attrs)
 
@@ -91,6 +96,7 @@ defmodule Receipts.LineItemTest do
 
     test "returns 2 when one line item exists" do
       item = create_item(100)
+
       Repo.insert!(%LineItem{
         item_id: item.id,
         identifier: 1,
@@ -103,12 +109,14 @@ defmodule Receipts.LineItemTest do
 
     test "returns 3 when two line items exist" do
       item = create_item(101)
+
       Repo.insert!(%LineItem{
         item_id: item.id,
         identifier: 1,
         csv_row_hash: "hash1",
         csv_raw_line: "raw1"
       })
+
       Repo.insert!(%LineItem{
         item_id: item.id,
         identifier: 2,

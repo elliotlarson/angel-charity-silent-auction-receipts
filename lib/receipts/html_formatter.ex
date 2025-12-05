@@ -24,7 +24,8 @@ defmodule Receipts.HtmlFormatter do
   end
 
   defp already_formatted?(text) do
-    String.contains?(text, "<p>") or String.contains?(text, "<ul>") or String.contains?(text, "<h")
+    String.contains?(text, "<p>") or String.contains?(text, "<ul>") or
+      String.contains?(text, "<h")
   end
 
   defp not_blank?("\r\n" <> rest), do: not_blank?(rest)

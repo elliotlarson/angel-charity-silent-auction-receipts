@@ -111,7 +111,10 @@ defmodule Receipts.AIDescriptionProcessor do
         {:error, :invalid_response_format}
 
       {:error, reason} ->
-        Logger.warning("Failed to parse JSON: #{inspect(reason)}. Response: #{String.slice(response_text, 0..200)}")
+        Logger.warning(
+          "Failed to parse JSON: #{inspect(reason)}. Response: #{String.slice(response_text, 0..200)}"
+        )
+
         {:error, :invalid_response_format}
     end
   end

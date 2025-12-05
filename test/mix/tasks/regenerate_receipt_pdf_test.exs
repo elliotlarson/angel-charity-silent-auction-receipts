@@ -47,9 +47,10 @@ defmodule Mix.Tasks.RegenerateReceiptPdfPdfTest do
   end
 
   test "regenerates PDF from HTML file" do
-    output = capture_io(fn ->
-      Mix.Tasks.RegenerateReceiptPdf.run(["999"])
-    end)
+    output =
+      capture_io(fn ->
+        Mix.Tasks.RegenerateReceiptPdf.run(["999"])
+      end)
 
     assert output =~ "Reading HTML from:"
     assert output =~ "receipt_999_test_item.html"
