@@ -71,6 +71,24 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
     end
   end
 
+  describe "parse_currency/1" do
+    test "removes dollar signs and commas" do
+      assert ProcessAuctionItems.parse_currency("$1,200.00") == "1200"
+      assert ProcessAuctionItems.parse_currency("$2,400.00") == "2400"
+      assert ProcessAuctionItems.parse_currency("$500.00") == "500"
+    end
+
+    test "handles values without formatting" do
+      assert ProcessAuctionItems.parse_currency("1200") == "1200"
+      assert ProcessAuctionItems.parse_currency("500") == "500"
+    end
+
+    test "handles empty values" do
+      assert ProcessAuctionItems.parse_currency("") == ""
+      assert ProcessAuctionItems.parse_currency("$0") == "0"
+    end
+  end
+
   describe "is_placeholder_row?/3" do
     test "returns true when item_id is zero - old format" do
       headers = [

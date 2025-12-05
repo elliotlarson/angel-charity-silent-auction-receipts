@@ -146,24 +146,47 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   end
 
   defp process_rows(rows, opts) do
-    [_title_row, headers, _empty_row | _data_rows] = rows
-
-    format = detect_format(headers)
+    # Detect format by checking first few rows for headers
+    {format, header_row_index} = detect_format_and_structure(rows)
 
     case format do
       :unknown ->
         Mix.shell().error("Unknown CSV format. Could not detect ITEM ID or TAG # header.")
-        Mix.shell().error("Headers found: #{inspect(headers)}")
+        Mix.shell().error("First few rows: #{inspect(Enum.take(rows, 3))}")
         %{new_items: 0, new_line_items: 0, updated: 0, skipped: 0, deleted: 0, deleted_items: 0}
 
       _ ->
         Mix.shell().info("Detected CSV format: #{format}")
-        process_rows_with_format(rows, format, opts)
+        process_rows_with_format(rows, format, header_row_index, opts)
     end
   end
 
-  defp process_rows_with_format(rows, format, opts) do
-    [_title_row, headers, _empty_row | data_rows] = rows
+  defp detect_format_and_structure(rows) do
+    # Check first 5 rows to find headers
+    rows
+    |> Enum.take(5)
+    |> Enum.with_index()
+    |> Enum.find_value({:unknown, 0}, fn {row, index} ->
+      case detect_format(row) do
+        :unknown -> nil
+        format -> {format, index}
+      end
+    end)
+  end
+
+  defp process_rows_with_format(rows, format, header_row_index, opts) do
+    headers = Enum.at(rows, header_row_index)
+
+    # Data rows start after headers (skip empty row for old format)
+    data_row_start =
+      case format do
+        # Skip empty row after headers
+        :old_format -> header_row_index + 2
+        # Data immediately after headers
+        :new_format -> header_row_index + 1
+      end
+
+    data_rows = Enum.drop(rows, data_row_start)
 
     valid_rows = Enum.reject(data_rows, &is_placeholder_row?(&1, headers, format))
     total = length(valid_rows)
@@ -341,6 +364,18 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     |> String.trim()
   end
 
+  @doc false
+  def parse_currency(value) do
+    value
+    |> String.replace(~r/[$,\s]/, "")
+    |> String.split(".")
+    |> List.first()
+    |> case do
+      "" -> ""
+      num -> num
+    end
+  end
+
   defp build_attrs(row, headers, csv_row_hash, csv_raw_line, item_id, format, opts) do
     mappings = field_mappings(format)
 
@@ -358,8 +393,9 @@ defmodule Mix.Tasks.ProcessAuctionItems do
             end
 
           normalized_value =
-            case {field_name, value} do
-              {:fair_market_value, ""} -> nil
+            case {field_name, value, format} do
+              {:fair_market_value, "", _} -> nil
+              {:fair_market_value, val, :new_format} -> parse_currency(val)
               _ -> value
             end
 
