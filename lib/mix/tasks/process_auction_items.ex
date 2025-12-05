@@ -13,13 +13,49 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
   @shortdoc "Process auction items CSV files and save to database"
 
-  @field_mappings %{
-    "CATEGORIES (OPTIONAL)" => :categories,
-    "15 CHARACTER DESCRIPTION" => :short_title,
-    "100 CHARACTER DESCRIPTION" => :title,
-    "1500 CHARACTER DESCRIPTION (OPTIONAL)" => :description,
-    "FAIR MARKET VALUE" => :fair_market_value
-  }
+  @doc false
+  def detect_format(headers) do
+    header_strings = Enum.map(headers, &String.upcase(String.trim(&1)))
+
+    cond do
+      "ITEM ID" in header_strings -> :old_format
+      "TAG #" in header_strings -> :new_format
+      true -> :unknown
+    end
+  end
+
+  @doc false
+  def field_mappings(:old_format) do
+    %{
+      "CATEGORIES (OPTIONAL)" => :categories,
+      "15 CHARACTER DESCRIPTION" => :short_title,
+      "100 CHARACTER DESCRIPTION" => :title,
+      "1500 CHARACTER DESCRIPTION (OPTIONAL)" => :description,
+      "FAIR MARKET VALUE" => :fair_market_value,
+      "ITEM ID" => :item_identifier
+    }
+  end
+
+  def field_mappings(:new_format) do
+    %{
+      "CATEGORY" => :categories,
+      "ITEM DONATED TITLE" => :title,
+      "DETAILED ITEM DESCRIPTION" => :description,
+      "VALUE" => :fair_market_value,
+      "TAG #" => :item_identifier
+    }
+  end
+
+  @doc false
+  def extract_numeric_identifier(tag) do
+    tag
+    |> String.replace(~r/[^0-9]/, "")
+    |> String.trim_leading("0")
+    |> case do
+      "" -> "0"
+      num -> num
+    end
+  end
 
   def run(args) do
     Application.ensure_all_started(:receipts)
@@ -76,7 +112,10 @@ defmodule Mix.Tasks.ProcessAuctionItems do
         Enum.at(files, selection - 1)
 
       _ ->
-        Mix.shell().error("Invalid selection. Please enter a number between 1 and #{length(files)}")
+        Mix.shell().error(
+          "Invalid selection. Please enter a number between 1 and #{length(files)}"
+        )
+
         prompt_file_selection(files)
     end
   end
@@ -107,27 +146,53 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   end
 
   defp process_rows(rows, opts) do
+    [_title_row, headers, _empty_row | _data_rows] = rows
+
+    format = detect_format(headers)
+
+    case format do
+      :unknown ->
+        Mix.shell().error("Unknown CSV format. Could not detect ITEM ID or TAG # header.")
+        Mix.shell().error("Headers found: #{inspect(headers)}")
+        %{new_items: 0, new_line_items: 0, updated: 0, skipped: 0, deleted: 0, deleted_items: 0}
+
+      _ ->
+        Mix.shell().info("Detected CSV format: #{format}")
+        process_rows_with_format(rows, format, opts)
+    end
+  end
+
+  defp process_rows_with_format(rows, format, opts) do
     [_title_row, headers, _empty_row | data_rows] = rows
 
-    valid_rows = Enum.reject(data_rows, &is_placeholder_row?/1)
+    valid_rows = Enum.reject(data_rows, &is_placeholder_row?(&1, headers, format))
     total = length(valid_rows)
     skip_ai = Keyword.get(opts, :skip_ai_processing, false)
 
-    stats = %{new_items: 0, new_line_items: 0, updated: 0, skipped: 0, deleted: 0, deleted_items: 0}
+    stats = %{
+      new_items: 0,
+      new_line_items: 0,
+      updated: 0,
+      skipped: 0,
+      deleted: 0,
+      deleted_items: 0
+    }
 
     # Group rows by item_identifier to determine position within each item
-    rows_by_item = group_rows_by_item(valid_rows, headers)
+    rows_by_item = group_rows_by_item(valid_rows, headers, format)
 
     # Track which line items we've processed from CSV
     {stats, processed_line_item_ids} =
       valid_rows
       |> Enum.with_index(1)
       |> Enum.reduce({stats, MapSet.new()}, fn {row, csv_index}, {acc, seen} ->
-        item_identifier_str = get_column(row, find_header_index(headers, "ITEM ID"))
+        item_identifier_str = get_item_identifier(row, headers, format)
         item_identifier = String.to_integer(item_identifier_str)
         position = get_position_within_item(row, rows_by_item[item_identifier])
 
-        {updated_stats, line_item_id} = process_row(row, headers, csv_index, total, position, skip_ai, acc)
+        {updated_stats, line_item_id} =
+          process_row(row, headers, csv_index, total, position, skip_ai, acc, format)
+
         {updated_stats, MapSet.put(seen, line_item_id)}
       end)
 
@@ -148,23 +213,38 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     stats
   end
 
-  defp group_rows_by_item(rows, headers) do
+  defp group_rows_by_item(rows, headers, format) do
     rows
     |> Enum.group_by(fn row ->
-      item_identifier_str = get_column(row, find_header_index(headers, "ITEM ID"))
+      item_identifier_str = get_item_identifier(row, headers, format)
       String.to_integer(item_identifier_str)
     end)
+  end
+
+  defp get_item_identifier(row, headers, format) do
+    header =
+      case format do
+        :old_format -> "ITEM ID"
+        :new_format -> "TAG #"
+      end
+
+    raw_value = get_column(row, find_header_index(headers, header))
+
+    case format do
+      :old_format -> raw_value
+      :new_format -> extract_numeric_identifier(raw_value)
+    end
   end
 
   defp get_position_within_item(row, rows_for_item) do
     Enum.find_index(rows_for_item, fn r -> r == row end) + 1
   end
 
-  defp process_row(row, headers, csv_index, total, identifier, skip_ai, stats) do
+  defp process_row(row, headers, csv_index, total, identifier, skip_ai, stats, format) do
     csv_raw_line = Enum.join(row, ",")
     csv_row_hash = hash_csv_row(csv_raw_line)
 
-    item_identifier_str = get_column(row, find_header_index(headers, "ITEM ID"))
+    item_identifier_str = get_item_identifier(row, headers, format)
     item_identifier = String.to_integer(item_identifier_str)
 
     # Find or create Item
@@ -174,20 +254,28 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     # Find existing line item by item_id + identifier (position)
     existing_by_position =
       Repo.one(
-        from li in LineItem,
+        from(li in LineItem,
           where: li.item_id == ^item.id and li.identifier == ^identifier
+        )
       )
 
     {stats, line_item_id} =
       cond do
         # Same position, same hash - unchanged, skip
         not is_nil(existing_by_position) and existing_by_position.csv_row_hash == csv_row_hash ->
-          Mix.shell().info("[#{csv_index}/#{total}] Skipped line item for ##{item_identifier} (unchanged)")
+          Mix.shell().info(
+            "[#{csv_index}/#{total}] Skipped line item for ##{item_identifier} (unchanged)"
+          )
+
           {%{stats | skipped: stats.skipped + 1}, existing_by_position.id}
 
         # Same position, different hash - data changed, update
         not is_nil(existing_by_position) ->
-          attrs = build_attrs(row, headers, csv_row_hash, csv_raw_line, item.id, skip_ai: skip_ai)
+          attrs =
+            build_attrs(row, headers, csv_row_hash, csv_raw_line, item.id, format,
+              skip_ai: skip_ai
+            )
+
           changeset = LineItem.changeset(existing_by_position, attrs)
           {:ok, updated_item} = Repo.update(changeset)
           Mix.shell().info("[#{csv_index}/#{total}] Updated line item for ##{item_identifier}")
@@ -195,7 +283,11 @@ defmodule Mix.Tasks.ProcessAuctionItems do
 
         # New line item - process and insert
         true ->
-          attrs = build_attrs(row, headers, csv_row_hash, csv_raw_line, item.id, skip_ai: skip_ai)
+          attrs =
+            build_attrs(row, headers, csv_row_hash, csv_raw_line, item.id, format,
+              skip_ai: skip_ai
+            )
+
           attrs_with_identifier = Map.put(attrs, :identifier, identifier)
           changeset = LineItem.changeset(%LineItem{}, attrs_with_identifier)
           {:ok, new_item} = Repo.insert(changeset)
@@ -213,6 +305,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
           %Item{}
           |> Item.changeset(%{item_identifier: item_identifier})
           |> Repo.insert()
+
         {item, true}
 
       item ->
@@ -226,11 +319,18 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   end
 
   @doc false
-  def is_placeholder_row?(row) do
-    item_id = get_column(row, 1)
-    fair_market_value = get_column(row, 8)
+  def is_placeholder_row?(row, headers, format) do
+    item_id = get_item_identifier(row, headers, format)
 
-    item_id in ["", "0"] or fair_market_value in ["", "0"]
+    fmv_header =
+      case format do
+        :old_format -> "FAIR MARKET VALUE"
+        :new_format -> "VALUE"
+      end
+
+    fair_market_value = get_column(row, find_header_index(headers, fmv_header))
+
+    item_id in ["", "0"] or fair_market_value in ["", "0", "$0", "$0.00"]
   end
 
   @doc false
@@ -241,23 +341,30 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     |> String.trim()
   end
 
-  defp build_attrs(row, headers, csv_row_hash, csv_raw_line, item_id, opts) do
+  defp build_attrs(row, headers, csv_row_hash, csv_raw_line, item_id, format, opts) do
+    mappings = field_mappings(format)
+
     attrs =
-      @field_mappings
+      mappings
       |> Enum.reduce(%{}, fn {header, field_name}, acc ->
-        value =
-          case find_header_index(headers, header) do
-            nil -> ""
-            index -> get_column(row, index)
-          end
+        # Skip item_identifier field - it's not a LineItem field
+        if field_name == :item_identifier do
+          acc
+        else
+          value =
+            case find_header_index(headers, header) do
+              nil -> ""
+              index -> get_column(row, index)
+            end
 
-        normalized_value =
-          case {field_name, value} do
-            {:fair_market_value, ""} -> nil
-            _ -> value
-          end
+          normalized_value =
+            case {field_name, value} do
+              {:fair_market_value, ""} -> nil
+              _ -> value
+            end
 
-        Map.put(acc, field_name, normalized_value)
+          Map.put(acc, field_name, normalized_value)
+        end
       end)
 
     attrs
@@ -277,7 +384,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
   defp delete_removed_line_items(processed_line_item_ids, stats) do
     # Find all line items in database that weren't in the CSV
     all_line_item_ids =
-      Repo.all(from li in LineItem, select: li.id)
+      Repo.all(from(li in LineItem, select: li.id))
       |> MapSet.new()
 
     removed_ids = MapSet.difference(all_line_item_ids, processed_line_item_ids)
