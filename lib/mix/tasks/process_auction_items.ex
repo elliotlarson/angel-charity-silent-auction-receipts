@@ -66,7 +66,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
       Enum.each(vars, fn {k, v} -> System.put_env(k, v) end)
     end
 
-    {opts, _, _} =
+    {opts, positional_args, _} =
       OptionParser.parse(args,
         switches: [skip_ai_processing: :boolean],
         aliases: [s: :skip_ai_processing]
@@ -79,7 +79,30 @@ defmodule Mix.Tasks.ProcessAuctionItems do
         Mix.shell().error("No CSV files found in #{Config.csv_dir()}")
 
       files ->
-        selected_file = prompt_file_selection(files)
+        selected_file =
+          case positional_args do
+            [filename] ->
+              # File specified as argument
+              if filename in files do
+                filename
+              else
+                Mix.shell().error("File '#{filename}' not found in #{Config.csv_dir()}")
+                Mix.shell().error("Available files: #{Enum.join(files, ", ")}")
+                exit({:shutdown, 1})
+              end
+
+            [] ->
+              # No file specified, prompt for selection
+              prompt_file_selection(files)
+
+            _ ->
+              Mix.shell().error(
+                "Usage: mix process_auction_items [filename] [--skip-ai-processing]"
+              )
+
+              exit({:shutdown, 1})
+          end
+
         process_file(selected_file, opts)
     end
   end
