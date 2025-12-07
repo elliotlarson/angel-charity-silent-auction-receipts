@@ -291,6 +291,23 @@ defmodule Mix.Tasks.ProcessAuctionItems do
     end
   end
 
+  @doc false
+  def clean_title(title) do
+    trimmed =
+      title
+      |> String.trim()
+      |> String.replace(~r/\.\s*$/, "")
+
+    # Capitalize first letter while preserving rest of the string
+    case trimmed do
+      "" ->
+        ""
+
+      <<first::utf8, rest::binary>> ->
+        String.upcase(<<first::utf8>>) <> rest
+    end
+  end
+
   defp build_attrs(row, headers, csv_row_hash, csv_raw_line, item_id) do
     mappings = field_mappings()
 
@@ -310,6 +327,7 @@ defmodule Mix.Tasks.ProcessAuctionItems do
             case {field_name, value} do
               {:value, ""} -> nil
               {:value, val} -> parse_value(val)
+              {:title, val} -> clean_title(val)
               _ -> value
             end
 

@@ -64,4 +64,30 @@ defmodule Mix.Tasks.ProcessAuctionItemsTest do
       assert ProcessAuctionItems.parse_value("$0") == "0"
     end
   end
+
+  describe "clean_title/1" do
+    test "removes trailing period" do
+      assert ProcessAuctionItems.clean_title("Landscaping Services.") == "Landscaping Services"
+    end
+
+    test "removes trailing period with whitespace" do
+      assert ProcessAuctionItems.clean_title("Wine Tasting. ") == "Wine Tasting"
+    end
+
+    test "capitalizes first letter when lowercase" do
+      assert ProcessAuctionItems.clean_title("original art") == "Original art"
+    end
+
+    test "preserves casing of rest of string" do
+      assert ProcessAuctionItems.clean_title("Gift Card") == "Gift Card"
+    end
+
+    test "capitalizes and removes period" do
+      assert ProcessAuctionItems.clean_title("gift card.") == "Gift card"
+    end
+
+    test "handles empty string" do
+      assert ProcessAuctionItems.clean_title("") == ""
+    end
+  end
 end
