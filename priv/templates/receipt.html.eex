@@ -107,14 +107,14 @@
             <p class="text-base font-bold"><%= @formatted_value %></p>
           </div>
 
-          <%= if @item.notes != "" do %>
+          <%= if @item.notes != "" and String.downcase(String.trim(@item.notes)) != "none" do %>
           <div>
             <h5 class="font-semibold text-xs uppercase text-gray-700 mb-1">Notes</h5>
             <p class="text-xs text-gray-800"><%= @item.notes %></p>
           </div>
           <% end %>
 
-          <%= if @item.expiration_notice != "" do %>
+          <%= if @item.expiration_notice != "" and String.downcase(String.trim(@item.expiration_notice)) != "none" do %>
           <div>
             <h5 class="font-semibold text-xs uppercase text-gray-700 mb-1">Expiration</h5>
             <p class="text-xs text-gray-800"><%= @item.expiration_notice %></p>
