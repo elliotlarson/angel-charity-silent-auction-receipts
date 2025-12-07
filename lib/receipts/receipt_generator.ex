@@ -58,7 +58,7 @@ defmodule Receipts.ReceiptGenerator do
     assigns = %{
       line_item: line_item,
       item: line_item,
-      formatted_value: Number.Currency.number_to_currency(line_item.fair_market_value),
+      formatted_value: Number.Currency.number_to_currency(line_item.value),
       logo_path: @logo_data_uri,
       line_item_position: current_position,
       line_item_total: total_count

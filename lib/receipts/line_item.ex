@@ -7,10 +7,10 @@ defmodule Receipts.LineItem do
   @derive Jason.Encoder
   schema "line_items" do
     field(:identifier, :integer)
-    field(:short_title, :string)
     field(:title, :string)
+    field(:slug, :string)
     field(:description, :string)
-    field(:fair_market_value, :integer)
+    field(:value, :integer)
     field(:categories, :string)
     field(:notes, :string)
     field(:expiration_notice, :string)
@@ -27,10 +27,9 @@ defmodule Receipts.LineItem do
     |> cast(attrs, [
       :item_id,
       :identifier,
-      :short_title,
       :title,
       :description,
-      :fair_market_value,
+      :value,
       :categories,
       :notes,
       :expiration_notice,
@@ -38,17 +37,37 @@ defmodule Receipts.LineItem do
       :csv_raw_line
     ])
     |> apply_defaults()
-    |> validate_required([:item_id, :identifier, :csv_row_hash, :csv_raw_line])
+    |> generate_slug()
+    |> validate_required([:item_id, :identifier, :slug, :csv_row_hash, :csv_raw_line])
     |> ensure_non_negative_integers()
     |> normalize_text_fields()
     |> foreign_key_constraint(:item_id)
     |> unique_constraint([:item_id, :identifier])
   end
 
+  defp generate_slug(changeset) do
+    case get_change(changeset, :title) do
+      nil ->
+        changeset
+
+      "" ->
+        put_change(changeset, :slug, "")
+
+      title ->
+        slug =
+          title
+          |> String.downcase()
+          |> String.replace(~r/[^a-z0-9\s]/, "")
+          |> String.replace(~r/\s+/, "_")
+          |> String.trim("_")
+
+        put_change(changeset, :slug, slug)
+    end
+  end
+
   defp apply_defaults(changeset) do
     changeset
-    |> put_default_if_nil_or_empty(:fair_market_value, 0)
-    |> put_default_if_nil(:short_title, "")
+    |> put_default_if_nil_or_empty(:value, 0)
     |> put_default_if_nil(:title, "")
     |> put_default_if_nil(:description, "")
     |> put_default_if_nil(:categories, "")
@@ -74,12 +93,11 @@ defmodule Receipts.LineItem do
 
   defp ensure_non_negative_integers(changeset) do
     changeset
-    |> update_change(:fair_market_value, &max(&1 || 0, 0))
+    |> update_change(:value, &max(&1 || 0, 0))
   end
 
   defp normalize_text_fields(changeset) do
     changeset
-    |> update_change(:short_title, &TextNormalizer.normalize/1)
     |> update_change(:title, &TextNormalizer.normalize/1)
     |> update_change(:description, &normalize_and_format_description/1)
   end
@@ -142,21 +160,13 @@ defmodule Receipts.LineItem do
   def receipt_filename(line_item) do
     alias Receipts.Repo
 
-    # Preload item if not already loaded
     line_item = Repo.preload(line_item, :item)
-
-    snake_case_title =
-      line_item.short_title
-      |> String.downcase()
-      |> String.replace(~r/[^a-z0-9]+/, "_")
-      |> String.trim("_")
-
     total = count_for_item(line_item.item_id)
 
     if total > 1 do
-      "receipt_#{line_item.item.item_identifier}_#{line_item.identifier}_of_#{total}_#{snake_case_title}"
+      "receipt_#{line_item.item.item_identifier}_#{line_item.identifier}_of_#{total}_#{line_item.slug}"
     else
-      "receipt_#{line_item.item.item_identifier}_#{snake_case_title}"
+      "receipt_#{line_item.item.item_identifier}_#{line_item.slug}"
     end
   end
 end

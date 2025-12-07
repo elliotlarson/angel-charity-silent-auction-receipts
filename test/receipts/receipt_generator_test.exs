@@ -12,9 +12,9 @@ defmodule Receipts.ReceiptGeneratorTest do
       %LineItem{
         identifier: 1,
         title: "Test",
-        short_title: "Test",
+        slug: "test",
         description: "<p>Test</p>",
-        fair_market_value: 100,
+        value: 100,
         categories: "",
         notes: "",
         expiration_notice: "",
@@ -29,7 +29,7 @@ defmodule Receipts.ReceiptGeneratorTest do
   describe "format_currency/1" do
     # Access private function for testing
     defp format_currency(value) do
-      line_item = test_line_item(%{fair_market_value: value})
+      line_item = test_line_item(%{value: value})
       html = ReceiptGenerator.render_html(line_item)
       [_before, currency, _after] = String.split(html, ~r/\$[\d,]+\.00/, include_captures: true)
       currency
@@ -69,7 +69,7 @@ defmodule Receipts.ReceiptGeneratorTest do
           item: item,
           title: "One Year Monthly Landscaping Services",
           description: "<p>Professional landscaping services.</p>",
-          fair_market_value: 1200,
+          value: 1200,
           notes: "Good for Tucson area.",
           expiration_notice: "No expiration date."
         })
@@ -92,7 +92,7 @@ defmodule Receipts.ReceiptGeneratorTest do
           item: item,
           title: "Test Item",
           description: "<p>Test description</p>",
-          fair_market_value: 500,
+          value: 500,
           notes: "",
           expiration_notice: ""
         })
@@ -112,7 +112,7 @@ defmodule Receipts.ReceiptGeneratorTest do
           item: item,
           title: "Expensive Item",
           description: "<p>Very valuable</p>",
-          fair_market_value: 25000
+          value: 25000
         })
 
       html = ReceiptGenerator.render_html(line_item)
@@ -137,7 +137,7 @@ defmodule Receipts.ReceiptGeneratorTest do
           item: item,
           title: "Test Item",
           description: "<p>Test description</p>",
-          fair_market_value: 1200
+          value: 1200
         })
 
       output_path = Path.join(output_dir, "test_receipt.pdf")

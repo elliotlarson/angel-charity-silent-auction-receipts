@@ -17,6 +17,7 @@ defmodule Receipts.LineItemTest do
       %{
         item_id: item.id,
         identifier: 1,
+        title: "Test",
         csv_row_hash: "abc123",
         csv_raw_line: "103,HOME,Landscaping,One Year Monthly Landscaping Services,..."
       },
@@ -27,7 +28,7 @@ defmodule Receipts.LineItemTest do
   describe "changeset/2" do
     test "valid with required fields" do
       item = create_item(103)
-      attrs = sample_attrs(item, %{short_title: "Test"})
+      attrs = sample_attrs(item, %{title: "Test"})
 
       changeset = LineItem.changeset(%LineItem{}, attrs)
 
@@ -50,13 +51,13 @@ defmodule Receipts.LineItemTest do
 
       attrs =
         sample_attrs(item, %{
-          fair_market_value: "1200"
+          value: "1200"
         })
 
       changeset = LineItem.changeset(%LineItem{}, attrs)
 
       assert changeset.valid?
-      assert get_change(changeset, :fair_market_value) == 1200
+      assert get_change(changeset, :value) == 1200
     end
 
     test "normalizes text fields" do
@@ -64,7 +65,6 @@ defmodule Receipts.LineItemTest do
 
       attrs =
         sample_attrs(item, %{
-          short_title: "artist ,",
           title: "services .",
           description: "This is  a test.Good stuff !"
         })
@@ -72,19 +72,98 @@ defmodule Receipts.LineItemTest do
       changeset = LineItem.changeset(%LineItem{}, attrs)
 
       assert changeset.valid?
-      assert get_change(changeset, :short_title) == "artist,"
       assert get_change(changeset, :title) == "services."
       assert get_change(changeset, :description) == "<p>This is a test. Good stuff!</p>"
     end
 
-    test "converts negative fair_market_value to 0" do
+    test "converts negative value to 0" do
       item = create_item(130)
-      attrs = sample_attrs(item, %{fair_market_value: "-1"})
+      attrs = sample_attrs(item, %{value: "-1"})
 
       changeset = LineItem.changeset(%LineItem{}, attrs)
 
       assert changeset.valid?
-      assert get_change(changeset, :fair_market_value) == 0
+      assert get_change(changeset, :value) == 0
+    end
+  end
+
+  describe "slug generation" do
+    test "generates slug from title" do
+      item = create_item(103)
+      attrs = sample_attrs(item, %{title: "Landscaping Services"})
+      changeset = LineItem.changeset(%LineItem{}, attrs)
+      assert changeset.changes.slug == "landscaping_services"
+    end
+
+    test "removes special characters from slug" do
+      item = create_item(103)
+      attrs = sample_attrs(item, %{title: "Art & Wine Tasting!"})
+      changeset = LineItem.changeset(%LineItem{}, attrs)
+      assert changeset.changes.slug == "art_wine_tasting"
+    end
+
+    test "collapses multiple spaces in slug" do
+      item = create_item(103)
+      attrs = sample_attrs(item, %{title: "Premium   Spa   Package"})
+      changeset = LineItem.changeset(%LineItem{}, attrs)
+      assert changeset.changes.slug == "premium_spa_package"
+    end
+  end
+
+  describe "receipt_filename/1" do
+    test "generates filename with slug for single item" do
+      item = create_item(103)
+
+      line_item =
+        %LineItem{
+          slug: "landscaping_services",
+          item_id: item.id,
+          identifier: 1
+        }
+        |> Map.put(:item, item)
+
+      assert LineItem.receipt_filename(line_item) == "receipt_103_landscaping_services"
+    end
+
+    test "generates filename with slug for multiple items" do
+      item = create_item(139)
+
+      Repo.insert!(%LineItem{
+        item_id: item.id,
+        identifier: 1,
+        title: "Item 1",
+        slug: "item_1",
+        csv_row_hash: "hash1",
+        csv_raw_line: "raw1"
+      })
+
+      Repo.insert!(%LineItem{
+        item_id: item.id,
+        identifier: 2,
+        title: "Item 2",
+        slug: "item_2",
+        csv_row_hash: "hash2",
+        csv_raw_line: "raw2"
+      })
+
+      Repo.insert!(%LineItem{
+        item_id: item.id,
+        identifier: 3,
+        title: "Item 3",
+        slug: "item_3",
+        csv_row_hash: "hash3",
+        csv_raw_line: "raw3"
+      })
+
+      line_item =
+        %LineItem{
+          slug: "ac_hotel",
+          item_id: item.id,
+          identifier: 2
+        }
+        |> Map.put(:item, item)
+
+      assert LineItem.receipt_filename(line_item) == "receipt_139_2_of_3_ac_hotel"
     end
   end
 
