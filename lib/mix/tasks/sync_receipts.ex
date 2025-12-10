@@ -4,7 +4,7 @@ defmodule Mix.Tasks.SyncReceipts do
 
   @shortdoc "Sync PDF receipts to DropBox shared folder"
 
-  @dropbox_dest "~/Dropbox/Projects/AngelCharity/2025_silent_auction_receipts/"
+  @dropbox_dest "~/Dropbox/Projects/AngelCharity/2025_silent_auction_receipts/pdfs/"
 
   def run(_args) do
     source_dir = Config.pdf_dir()
