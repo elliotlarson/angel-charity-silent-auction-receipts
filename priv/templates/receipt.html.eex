@@ -31,9 +31,6 @@
     .text-gray-800 h5 {
       margin-top: 1rem !important;
       margin-bottom: 0.5rem !important;
-      font-weight: 600 !important;
-      font-size: 0.875rem !important;
-      text-transform: uppercase !important;
     }
 
     @media print {
