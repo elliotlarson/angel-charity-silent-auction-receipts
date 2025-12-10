@@ -47,6 +47,7 @@ When you receive a new CSV file from Angel Charity, follow these steps:
 ## Processing Auction Items
 
 This project uses a normalized Item/LineItem data model where:
+
 - **Items** represent unique auction packages (e.g., Item #139)
 - **LineItems** represent individual offerings within an item (e.g., different package options)
 - Some items have multiple line items (e.g., hotel packages with different add-ons)
@@ -107,9 +108,11 @@ The task uses Claude (Anthropic API) to intelligently extract:
 ### Data Model
 
 **Items table:**
+
 - `item_identifier` - Business ID from CSV (e.g., 103, 139)
 
 **LineItems table (one row per CSV row):**
+
 - `identifier` - Position within item (1, 2, 3 for multiple line items)
 - `short_title` - 15 character description
 - `title` - 100 character description
@@ -181,6 +184,7 @@ receipts/
 ```
 
 **Filename format:**
+
 - Single line item: `receipt_<item_id>_<short_title>.[pdf|html]`
 - Multiple line items: `receipt_<item_id>_<n>_of_<total>_<short_title>.[pdf|html]`
 
@@ -204,6 +208,7 @@ Successfully generated: 137 receipts
 After generating receipts, you can regenerate individual line items:
 
 **Regenerate from database (fresh HTML + PDF):**
+
 ```bash
 mix generate_receipt <line_item_id>
 ```
@@ -213,6 +218,7 @@ This reads the current data from the database and generates fresh HTML and PDF f
 **Note:** Use the line item's database ID, not the item identifier. You can find line item IDs by querying the database or checking the filenames.
 
 **Regenerate PDF from edited HTML:**
+
 ```bash
 mix regenerate_receipt_pdf <item_id>
 ```
@@ -253,6 +259,7 @@ mix run scripts/capture_api_responses.exs
 ```
 
 This script:
+
 - Makes real API calls to Anthropic (requires `ANTHROPIC_API_KEY` in `.env`)
 - Captures successful and error responses
 - Saves them as fixtures in `test/fixtures/`
