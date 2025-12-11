@@ -41,6 +41,11 @@ defmodule Mix.Tasks.GenerateReceipts do
     if failed > 0 do
       Mix.shell().error("Failed: #{failed} receipts")
     end
+
+    # Generate combined PDF
+    if successful > 0 do
+      combine_pdfs(line_items, pdf_dir)
+    end
   end
 
   defp generate_receipt(line_item, index, total, pdf_dir, html_dir) do
@@ -95,6 +100,51 @@ defmodule Mix.Tasks.GenerateReceipts do
 
       {:error, :enoent} ->
         :ok
+    end
+  end
+
+  defp combine_pdfs(line_items, pdf_dir) do
+    Mix.shell().info("\nCombining all PDFs into a single file...")
+
+    # Get all PDF paths in sorted order
+    pdf_paths =
+      line_items
+      |> Enum.map(fn line_item ->
+        base_filename = LineItem.receipt_filename(line_item)
+        Path.join(pdf_dir, "#{base_filename}.pdf")
+      end)
+      |> Enum.filter(&File.exists?/1)
+
+    if Enum.empty?(pdf_paths) do
+      Mix.shell().error("No PDFs found to combine")
+      :error
+    else
+      combined_path = Path.join(pdf_dir, "combined_receipts.pdf")
+
+      # Use ghostscript to combine PDFs
+      args = [
+        "-dBATCH",
+        "-dNOPAUSE",
+        "-q",
+        "-sDEVICE=pdfwrite",
+        "-sOutputFile=#{combined_path}"
+        | pdf_paths
+      ]
+
+      case System.cmd("gs", args, stderr_to_stdout: true) do
+        {_output, 0} ->
+          Mix.shell().info("Combined PDF created: #{combined_path}")
+          :ok
+
+        {output, _code} ->
+          Mix.shell().error("Failed to combine PDFs using ghostscript")
+          Mix.shell().error(output)
+          Mix.shell().info(
+            "Hint: Install ghostscript with 'brew install ghostscript' on macOS"
+          )
+
+          :error
+      end
     end
   end
 end

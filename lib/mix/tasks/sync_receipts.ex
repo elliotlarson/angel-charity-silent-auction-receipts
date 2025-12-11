@@ -23,6 +23,10 @@ defmodule Mix.Tasks.SyncReceipts do
 
     Mix.shell().info("Syncing receipts from #{source_dir} to #{dest_dir}...")
 
+    # Strip extended attributes before syncing to prevent Windows file type issues
+    Mix.shell().info("Removing extended attributes from PDFs...")
+    System.cmd("xattr", ["-cr", source_dir])
+
     case System.cmd("rsync", ["-av", "--delete", source_dir <> "/", dest_dir <> "/"]) do
       {output, 0} ->
         Mix.shell().info(output)
