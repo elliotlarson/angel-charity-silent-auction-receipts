@@ -32,7 +32,5 @@ db/receipts_test.db*
 db/receipts_dev.db-shm
 db/receipts_dev.db-wal
 
-# AI processing cache
-db/auction_items_source_data/cache/
 receipts/pdf/*
 receipts/html/*

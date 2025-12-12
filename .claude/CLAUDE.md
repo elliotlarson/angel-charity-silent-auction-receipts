@@ -36,7 +36,6 @@ This is an Elixir project called "Receipts" for processing auction item data fro
 - `test/` - Test files (\*.exs)
 - `db/` - Data directory
   - `auction_items_source_data/` - Source CSV files with auction item data
-  - `auction_items_source_data/cache/` - AI processing cache (SHA256-named JSON files)
   - `receipts_dev.db` - SQLite database (source of truth for auction items)
   - `receipts_test.db` - SQLite test database
 - `receipts/` - Generated output files

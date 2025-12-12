@@ -20,10 +20,6 @@ defmodule Receipts.ConfigTest do
       assert Config.html_dir() == "receipts/html"
     end
 
-    test "cache_dir returns default path" do
-      assert Config.cache_dir() == "db/auction_items_source_data/cache"
-    end
-
     test "template_path returns default path" do
       assert Config.template_path() == "priv/templates/receipt.html.eex"
     end

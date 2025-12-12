@@ -16,9 +16,6 @@ defmodule Receipts.Config do
   @doc "Directory for generated HTML receipts"
   def html_dir, do: get_env(:html_dir, "receipts/html")
 
-  @doc "Directory for AI processing cache"
-  def cache_dir, do: get_env(:cache_dir, "db/auction_items_source_data/cache")
-
   @doc "Path to receipt HTML template"
   def template_path, do: get_env(:template_path, "priv/templates/receipt.html.eex")
 
