@@ -55,4 +55,59 @@ defmodule Mix.Tasks.ReportImportDataChanges do
         []
     end
   end
+
+  defp parse_csv(filename) do
+    csv_path = Path.join(Config.csv_dir(), filename)
+
+    rows =
+      csv_path
+      |> File.stream!()
+      |> ReportCSVParser.parse_stream()
+      |> Enum.to_list()
+
+    # First row is headers, rest are data rows
+    [headers | data_rows] = rows
+
+    # Find column indices for required fields
+    qtego_idx = find_header_index(headers, "QTEGO #")
+    title_idx = find_header_index(headers, "ITEM DONATED TITLE")
+    value_idx = find_header_index(headers, "VALUE")
+    desc_idx = find_header_index(headers, "DETAILED ITEM DESCRIPTION")
+
+    # Build map keyed by Qtego #
+    data_rows
+    |> Enum.reduce(%{}, fn row, acc ->
+      qtego = get_column(row, qtego_idx)
+
+      # Skip items with empty Qtego #
+      if qtego == "" do
+        acc
+      else
+        item_data = %{
+          qtego: qtego,
+          title: get_column(row, title_idx),
+          price: get_column(row, value_idx),
+          description: get_column(row, desc_idx)
+        }
+
+        Map.put(acc, qtego, item_data)
+      end
+    end)
+  end
+
+  defp find_header_index(headers, target_header) do
+    headers
+    |> Enum.find_index(fn header ->
+      String.upcase(String.trim(header)) == target_header
+    end)
+  end
+
+  defp get_column(row, index) when is_integer(index) do
+    row
+    |> Enum.at(index, "")
+    |> to_string()
+    |> String.trim()
+  end
+
+  defp get_column(_row, nil), do: ""
 end
