@@ -156,16 +156,18 @@ defmodule Mix.Tasks.ReportImportDataChanges do
     data_rows
     |> Enum.reduce(%{}, fn row, acc ->
       qtego = get_column(row, qtego_idx)
+      title = get_column(row, title_idx)
+      description = get_column(row, desc_idx)
 
-      # Skip items with empty Qtego #
-      if qtego == "" do
+      # Skip items with empty Qtego #, title, or description
+      if qtego == "" or title == "" or description == "" do
         acc
       else
         item_data = %{
           qtego: qtego,
-          title: get_column(row, title_idx),
+          title: title,
           price: get_column(row, value_idx),
-          description: get_column(row, desc_idx)
+          description: description
         }
 
         Map.put(acc, qtego, item_data)
