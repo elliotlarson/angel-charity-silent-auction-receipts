@@ -1,5 +1,6 @@
 {
   "storiesDir": "stories",
   "aiCommand": "claude --dangerously-skip-permissions",
-  "editor": "zed"
+  "editor": "zed",
+  "useFzf": true
 }

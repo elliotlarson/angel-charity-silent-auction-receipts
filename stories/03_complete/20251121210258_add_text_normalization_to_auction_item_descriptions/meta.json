@@ -1,0 +1,16 @@
+{
+  "title": "Add text normalization to auction item descriptions",
+  "directory": "20251121210258_add_text_normalization_to_auction_item_descriptions",
+  "createdAt": "2025-11-21T21:02:58.000Z",
+  "github": {
+    "issues": {
+      "ids": [],
+      "parentIds": [],
+      "referenceIds": []
+    },
+    "pullRequests": {
+      "ids": [],
+      "referenceIds": []
+    }
+  }
+}

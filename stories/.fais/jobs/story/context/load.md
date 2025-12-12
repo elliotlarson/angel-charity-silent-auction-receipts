@@ -1,6 +1,8 @@
 # Instructions for Loading Story Context
 
-This prompt helps you resume work on a story by loading all relevant files into context. It's particularly useful when starting a new AI session after closing a previous one, or when you need to review a story before making changes (e.g., addressing PR feedback).
+This prompt helps you resume work on a story by loading all relevant files into context. It's
+particularly useful when starting a new AI session after closing a previous one, or when you need to
+review a story before making changes (e.g., addressing PR feedback).
 
 ## What This Prompt Does
 

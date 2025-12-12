@@ -1,0 +1,16 @@
+{
+  "title": "Migrate to Item and LineItem data model with has_many relationship",
+  "directory": "20251123161448_migrate_to_item_and_lineitem_data_model_with_has_many_relationship",
+  "createdAt": "2025-11-23T16:14:48.000Z",
+  "github": {
+    "issues": {
+      "ids": [],
+      "parentIds": [],
+      "referenceIds": []
+    },
+    "pullRequests": {
+      "ids": [],
+      "referenceIds": []
+    }
+  }
+}

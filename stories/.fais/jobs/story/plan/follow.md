@@ -1,17 +1,21 @@
 # Instructions for Following a Story's Implementation Plan
 
-Find and read the plan file in the same directory as the story that linked to this prompt. The plan file may be named `plan.md` or with a numbered prefix like `02_plan.md`. Execute its implementation steps following the workflow below.
+Find and read the plan file in the same directory as the story that linked to this prompt. The plan
+file may be named `plan.md` or with a numbered prefix like `02_plan.md`. Execute its implementation
+steps following the workflow below.
 
 ## Character Encoding Requirement
 
-**IMPORTANT**: When generating any content that will be written to files, you MUST use only valid UTF-8 characters. Avoid using:
+**IMPORTANT**: When generating any content that will be written to files, you MUST use only valid
+UTF-8 characters. Avoid using:
 
 - Invalid Unicode sequences
 - Special characters that may not be UTF-8 compatible
 - Unusual symbols or emojis unless explicitly required
 - Characters outside the standard UTF-8 range
 
-Stick to standard ASCII and common UTF-8 characters (standard letters, numbers, punctuation, and common symbols).
+Stick to standard ASCII and common UTF-8 characters (standard letters, numbers, punctuation, and
+common symbols).
 
 ## Starting the Session
 
@@ -19,7 +23,8 @@ Stick to standard ASCII and common UTF-8 characters (standard letters, numbers, 
 2. **Check progress**: Look at the Progress Checklist at the top of the plan file
    - Checked items (- [x]) are completed
    - First unchecked item (- [ ]) is the next task to work on
-3. **Review context**: Read the Overview, Key Design Decisions, and the detailed Implementation Steps section for the current step
+3. **Review context**: Read the Overview, Key Design Decisions, and the detailed Implementation
+   Steps section for the current step
 
 ## Implementation Workflow
 
@@ -109,7 +114,8 @@ When all items in the Progress Checklist are checked:
 
 ## Final UTF-8 Validation
 
-Before completing your work, verify that all content you've written to files uses valid UTF-8 characters:
+Before completing your work, verify that all content you've written to files uses valid UTF-8
+characters:
 
 - Review any markdown files, code files, or text files you've created or modified
 - Ensure no invalid Unicode sequences or non-UTF-8 characters were used

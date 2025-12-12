@@ -1,0 +1,16 @@
+{
+  "title": "Support new CSV format for auction items",
+  "directory": "20251205105402_support_new_csv_format_for_auction_items",
+  "createdAt": "2025-12-05T10:54:02.000Z",
+  "github": {
+    "issues": {
+      "ids": [],
+      "parentIds": [],
+      "referenceIds": []
+    },
+    "pullRequests": {
+      "ids": [],
+      "referenceIds": []
+    }
+  }
+}

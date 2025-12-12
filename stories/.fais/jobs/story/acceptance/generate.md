@@ -1,30 +1,39 @@
 # Instructions for Generating Acceptance Testing Instructions
 
-Generate manual acceptance testing instructions in `acceptance.md` by analyzing the story requirements and implementation plan. These instructions should provide high-level test scenarios that QA personnel or developers can follow to verify the functionality works as intended.
+Generate manual acceptance testing instructions in `acceptance.md` by analyzing the story
+requirements and implementation plan. These instructions should provide high-level test scenarios
+that QA personnel or developers can follow to verify the functionality works as intended.
 
 ## Character Encoding Requirement
 
-**IMPORTANT**: When generating any content that will be written to files, you MUST use only valid UTF-8 characters. Avoid using:
+**IMPORTANT**: When generating any content that will be written to files, you MUST use only valid
+UTF-8 characters. Avoid using:
 
 - Invalid Unicode sequences
 - Special characters that may not be UTF-8 compatible
 - Unusual symbols or emojis unless explicitly required
 - Characters outside the standard UTF-8 range
 
-Stick to standard ASCII and common UTF-8 characters (standard letters, numbers, punctuation, and common symbols).
+Stick to standard ASCII and common UTF-8 characters (standard letters, numbers, punctuation, and
+common symbols).
 
 ## Process
 
 ### 1. Locate and Read the Context Files
 
-First, find the existing acceptance file in the story directory by looking for any file with "acceptance" in its name (e.g., `acceptance.md`, `03_acceptance.md`, `04_acceptance.md`, etc.). You will write your generated content to this existing file.
+First, find the existing acceptance file in the story directory by looking for any file with
+"acceptance" in its name (e.g., `acceptance.md`, `03_acceptance.md`, `04_acceptance.md`, etc.). You
+will write your generated content to this existing file.
 
 Then read both context files from the same directory:
 
-- **story.md** (or numbered variant like `01_story.md`) - Contains the feature requirements and user stories
-- **plan file** (may be `plan.md` or numbered like `02_plan.md`) - Contains the detailed implementation approach
+- **story.md** (or numbered variant like `01_story.md`) - Contains the feature requirements and user
+  stories
+- **plan file** (may be `plan.md` or numbered like `02_plan.md`) - Contains the detailed
+  implementation approach
 
-If either context file is missing or empty, note this in the acceptance file and provide what guidance you can based on available information.
+If either context file is missing or empty, note this in the acceptance file and provide what
+guidance you can based on available information.
 
 ### 2. Identify Testable Functionality
 
@@ -33,7 +42,8 @@ Analyze the story and plan to identify:
 - **User-facing features**: Functionality that end users interact with directly
 - **UI components**: New or modified interface elements
 - **API endpoints**: Backend functionality that can be tested via API calls
-- **Developer-only changes**: Internal refactoring or infrastructure that requires technical verification
+- **Developer-only changes**: Internal refactoring or infrastructure that requires technical
+  verification
 - **Integration points**: Where this feature interacts with existing functionality
 
 ### 3. Prioritize Testing Approaches
@@ -56,7 +66,10 @@ Structure test scenarios by feature area. For each scenario:
 
 ### 5. Write to the Existing Acceptance File
 
-Write your generated content to the existing acceptance file you found in step 1 (the file with "acceptance" in its name). This file may have a numbered prefix like `03_acceptance.md` or may be simply named `acceptance.md`. Overwrite the existing placeholder content with your comprehensive acceptance testing instructions.
+Write your generated content to the existing acceptance file you found in step 1 (the file with
+"acceptance" in its name). This file may have a numbered prefix like `03_acceptance.md` or may be
+simply named `acceptance.md`. Overwrite the existing placeholder content with your comprehensive
+acceptance testing instructions.
 
 ## Output Structure
 
@@ -132,18 +145,18 @@ Features that should still work after this change:
 
 ### Be Specific and Actionable
 
-❌ **Bad**: "Test that the form works"
-✅ **Good**: "Fill in the username field with 'testuser', email with 'test@example.com', click Submit, and verify a success message appears"
+❌ **Bad**: "Test that the form works" ✅ **Good**: "Fill in the username field with 'testuser',
+email with 'test@example.com', click Submit, and verify a success message appears"
 
 ### Include Concrete Examples
 
-❌ **Bad**: "Enter some invalid data"
-✅ **Good**: "Enter an invalid email address like 'notanemail' and verify an error message 'Invalid email format' appears below the field"
+❌ **Bad**: "Enter some invalid data" ✅ **Good**: "Enter an invalid email address like 'notanemail'
+and verify an error message 'Invalid email format' appears below the field"
 
 ### State Expected Results Clearly
 
-❌ **Bad**: "Check that it worked"
-✅ **Good**: "Verify the page redirects to /dashboard and displays 'Welcome, testuser' in the header"
+❌ **Bad**: "Check that it worked" ✅ **Good**: "Verify the page redirects to /dashboard and
+displays 'Welcome, testuser' in the header"
 
 ### Prioritize Appropriately
 
@@ -214,8 +227,7 @@ Testing the new user registration flow that allows visitors to create accounts v
 
 ## Test Scenario 1: Successful Registration
 
-**Priority**: High
-**Test Type**: End-User UI
+**Priority**: High **Test Type**: End-User UI
 
 ### Preconditions
 
@@ -270,7 +282,8 @@ Before finalizing the acceptance file:
 
 ## Final UTF-8 Validation
 
-Before completing your work, verify that all content you've written to files uses valid UTF-8 characters:
+Before completing your work, verify that all content you've written to files uses valid UTF-8
+characters:
 
 - Review any markdown files, code files, or text files you've created or modified
 - Ensure no invalid Unicode sequences or non-UTF-8 characters were used

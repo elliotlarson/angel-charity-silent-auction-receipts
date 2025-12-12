@@ -1,0 +1,16 @@
+{
+  "title": "Extract expiration dates and special notes from descriptions",
+  "directory": "20251121211351_extract_expiration_dates_and_special_notes_from_descriptions",
+  "createdAt": "2025-11-21T21:13:51.000Z",
+  "github": {
+    "issues": {
+      "ids": [],
+      "parentIds": [],
+      "referenceIds": []
+    },
+    "pullRequests": {
+      "ids": [],
+      "referenceIds": []
+    }
+  }
+}

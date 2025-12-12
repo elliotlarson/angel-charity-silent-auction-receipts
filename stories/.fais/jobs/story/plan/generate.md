@@ -1,17 +1,21 @@
 # Instructions for Creating a Coding Plan of Action File For A Story
 
-Create a detailed coding plan in the same directory as the file that linked to this file. First, look for the existing plan file in that directory, which may be named `plan.md` or with a numbered prefix like `02_plan.md`. Populate the existing plan file following these requirements:
+Create a detailed coding plan in the same directory as the file that linked to this file. First,
+look for the existing plan file in that directory, which may be named `plan.md` or with a numbered
+prefix like `02_plan.md`. Populate the existing plan file following these requirements:
 
 ## Character Encoding Requirement
 
-**IMPORTANT**: When generating any content that will be written to files, you MUST use only valid UTF-8 characters. Avoid using:
+**IMPORTANT**: When generating any content that will be written to files, you MUST use only valid
+UTF-8 characters. Avoid using:
 
 - Invalid Unicode sequences
 - Special characters that may not be UTF-8 compatible
 - Unusual symbols or emojis unless explicitly required
 - Characters outside the standard UTF-8 range
 
-Stick to standard ASCII and common UTF-8 characters (standard letters, numbers, punctuation, and common symbols).
+Stick to standard ASCII and common UTF-8 characters (standard letters, numbers, punctuation, and
+common symbols).
 
 ## Plan Template
 
@@ -61,11 +65,13 @@ Brief description of what we're building and why.
 
 ## Plan Structure
 
-The plan MUST be self-contained and resumable across multiple Claude Code sessions. Structure it so that any AI session can pick up where the last one left off.
+The plan MUST be self-contained and resumable across multiple Claude Code sessions. Structure it so
+that any AI session can pick up where the last one left off.
 
 1. **Progress Checklist** - Place at the top of the plan file
    - Use markdown checkboxes (- [ ]) for each commit
-   - **Format: `- [ ] Step N: <commit message>`** - Include "Step N:" prefix followed by the exact commit message from each implementation step
+   - **Format: `- [ ] Step N: <commit message>`** - Include "Step N:" prefix followed by the exact
+     commit message from each implementation step
    - **AI MUST update this checklist in the plan file** after completing each commit
    - Checked items (- [x]) indicate completed work
    - First unchecked item (- [ ]) is the next task to work on
@@ -84,14 +90,17 @@ The plan MUST be self-contained and resumable across multiple Claude Code sessio
    - Provide a single-line commit message for each step (no multi-line messages)
    - Follow project conventions (see git log for examples)
    - Keep messages concise and descriptive
-   - **DO NOT include "with tests" or "and tests" in commit messages** - Testing is expected for all code changes
+   - **DO NOT include "with tests" or "and tests" in commit messages** - Testing is expected for all
+     code changes
 
 4. **Code Examples and Context**
    - Include relevant code snippets showing approach
    - Reference specific files and patterns from the codebase
    - Include enough context so the plan is self-documenting
    - Note any important architectural decisions or patterns to follow
-   - **Document deviations from the original story** - If the plan takes a different approach than suggested in the story (e.g., different payload structure), document why in the "Key Design Decisions" section
+   - **Document deviations from the original story** - If the plan takes a different approach than
+     suggested in the story (e.g., different payload structure), document why in the "Key Design
+     Decisions" section
 
 ## Requirements
 
@@ -108,7 +117,8 @@ Code should be self-explanatory through good naming and clear structure. Avoid u
 **DO NOT include comments that:**
 
 - Describe what the code obviously does (e.g., `# Set the value` before `value = x`)
-- Explain how something was requested in the story (this context won't be relevant to future developers)
+- Explain how something was requested in the story (this context won't be relevant to future
+  developers)
 - Restate variable names or method names (e.g., `# Get valid keys` before `valid_keys = ...`)
 - Describe standard language features or patterns
 
@@ -161,7 +171,8 @@ for key, value := range data {
 
 ## Plan Quality Check
 
-**CRITICAL**: After generating your plan, you MUST review it against these guidelines before presenting it to the user.
+**CRITICAL**: After generating your plan, you MUST review it against these guidelines before
+presenting it to the user.
 
 **Self-Review Checklist:**
 
@@ -202,11 +213,13 @@ for key, value := range data {
 - ❌ Bad: "Add dynamicProperties rendering support to ApiSchema component with tests"
   - ✅ Good: "Add dynamicProperties rendering support to ApiSchema component"
 
-**If you find violations during self-review, fix them in the plan before presenting it to the user.**
+**If you find violations during self-review, fix them in the plan before presenting it to the
+user.**
 
 ## Code Sanity Review
 
-**CRITICAL**: After generating your plan, review the code examples and approach for common sense issues.
+**CRITICAL**: After generating your plan, review the code examples and approach for common sense
+issues.
 
 **Sanity Check Questions:**
 
@@ -289,7 +302,8 @@ When implementing the plan:
 
 ## Session Continuity
 
-**IMPORTANT**: This plan will be used across multiple Claude Code sessions. Each session may have limited context from previous sessions. Therefore:
+**IMPORTANT**: This plan will be used across multiple Claude Code sessions. Each session may have
+limited context from previous sessions. Therefore:
 
 - Keep all critical information IN the plan file
 - Don't rely on conversation history - document decisions in the plan file
@@ -299,7 +313,8 @@ When implementing the plan:
 
 ## Final UTF-8 Validation
 
-Before completing your work, verify that all content you've written to files uses valid UTF-8 characters:
+Before completing your work, verify that all content you've written to files uses valid UTF-8
+characters:
 
 - Review any markdown files, code files, or text files you've created or modified
 - Ensure no invalid Unicode sequences or non-UTF-8 characters were used
@@ -308,12 +323,15 @@ Before completing your work, verify that all content you've written to files use
 
 ## Customization
 
-This is a generic template. Customize it for your project's specific needs by adding additional sections such as:
+This is a generic template. Customize it for your project's specific needs by adding additional
+sections such as:
 
-- **Framework-Specific Guidelines**: Patterns and conventions for your framework (e.g., Rails, Django, Express)
+- **Framework-Specific Guidelines**: Patterns and conventions for your framework (e.g., Rails,
+  Django, Express)
 - **Testing Requirements**: Specific test coverage or testing patterns required
 - **Performance Considerations**: When to consider performance implications
 - **Security Checklist**: Security review items for sensitive changes
 - **Documentation Standards**: When and how to update project documentation
 
-You can add these customizations to this file or create additional instruction files in the `stories/_instructions/` directory.
+You can add these customizations to this file or create additional instruction files in the
+`stories/_instructions/` directory.
