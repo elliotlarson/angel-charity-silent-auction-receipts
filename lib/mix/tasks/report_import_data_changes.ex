@@ -77,8 +77,8 @@ defmodule Mix.Tasks.ReportImportDataChanges do
       item_count = length(items)
 
       Mix.shell().info(separator)
-      Mix.shell().info("Baseline: Items in #{filename}")
-      Mix.shell().info(separator)
+      Mix.shell().info("Initial load: Items in #{filename}")
+      Mix.shell().info(subseparator)
       Mix.shell().info("")
       Mix.shell().info("ITEMS (#{item_count})")
       Mix.shell().info(subseparator)
@@ -90,7 +90,7 @@ defmodule Mix.Tasks.ReportImportDataChanges do
       end)
 
       Mix.shell().info("")
-      Mix.shell().info(separator)
+      Mix.shell().info(subseparator)
       Mix.shell().info("Total: #{item_count} items")
       Mix.shell().info(separator)
       Mix.shell().info("")
@@ -295,7 +295,7 @@ defmodule Mix.Tasks.ReportImportDataChanges do
     # Header
     report = [separator | report]
     report = ["Changes from #{file1_name} to #{file2_name}" | report]
-    report = [separator | report]
+    report = [subseparator | report]
     report = ["" | report]
 
     # New items section
@@ -364,7 +364,7 @@ defmodule Mix.Tasks.ReportImportDataChanges do
       end
 
     # Summary
-    report = [separator | report]
+    report = [subseparator | report]
 
     report = [
       "Summary: #{new_count} new, #{deleted_count} deleted, #{updated_count} updated" | report
