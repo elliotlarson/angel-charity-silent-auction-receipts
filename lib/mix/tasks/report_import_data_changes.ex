@@ -27,19 +27,54 @@ defmodule Mix.Tasks.ReportImportDataChanges do
 
     csv_files = list_csv_files()
 
-    if length(csv_files) == 0 do
-      Mix.shell().error("No CSV files found in #{Config.csv_dir()}")
-      exit({:shutdown, 1})
+    case length(csv_files) do
+      0 ->
+        Mix.shell().error("No CSV files found in #{Config.csv_dir()}")
+        exit({:shutdown, 1})
+
+      1 ->
+        Mix.shell().info("Found only 1 CSV file:")
+        Mix.shell().info("  - #{List.first(csv_files)}")
+        Mix.shell().info("")
+        Mix.shell().info("Need at least 2 CSV files to compare.")
+        exit({:shutdown, 0})
+
+      count ->
+        Mix.shell().info("Found #{count} CSV file(s):")
+
+        csv_files
+        |> Enum.each(fn file ->
+          Mix.shell().info("  - #{file}")
+        end)
+
+        Mix.shell().info("")
+
+        # Process consecutive pairs
+        csv_files
+        |> Enum.chunk_every(2, 1, :discard)
+        |> Enum.each(fn [file1, file2] ->
+          process_comparison(file1, file2)
+        end)
     end
+  end
 
-    Mix.shell().info("Found #{length(csv_files)} CSV file(s):")
+  defp process_comparison(file1, file2) do
+    try do
+      # Parse both files
+      file1_data = parse_csv(file1)
+      file2_data = parse_csv(file2)
 
-    csv_files
-    |> Enum.each(fn file ->
-      Mix.shell().info("  - #{file}")
-    end)
+      # Compare
+      comparison = compare_csv_files(file1_data, file2_data)
 
-    Mix.shell().info("")
+      # Format and print report
+      report = format_report(file1, file2, comparison)
+      Mix.shell().info(report)
+    rescue
+      error ->
+        Mix.shell().error("Error comparing #{file1} and #{file2}:")
+        Mix.shell().error(Exception.message(error))
+    end
   end
 
   defp list_csv_files do
@@ -120,14 +155,14 @@ defmodule Mix.Tasks.ReportImportDataChanges do
     new_items =
       new_keys
       |> Enum.map(fn key -> Map.get(file2_data, key) end)
-      |> Enum.sort_by(& &1.qtego)
+      |> Enum.sort_by(& &1.qtego, :desc)
 
     # Deleted items: in file1 but not in file2
     deleted_keys = MapSet.difference(file1_keys, file2_keys)
     deleted_items =
       deleted_keys
       |> Enum.map(fn key -> Map.get(file1_data, key) end)
-      |> Enum.sort_by(& &1.qtego)
+      |> Enum.sort_by(& &1.qtego, :desc)
 
     # Items in both files - check for updates
     common_keys = MapSet.intersection(file1_keys, file2_keys)
@@ -139,7 +174,7 @@ defmodule Mix.Tasks.ReportImportDataChanges do
         detect_changes(item1, item2)
       end)
       |> Enum.reject(&is_nil/1)
-      |> Enum.sort_by(& &1.qtego)
+      |> Enum.sort_by(& &1.qtego, :desc)
 
     %{
       new: new_items,
@@ -194,6 +229,10 @@ defmodule Mix.Tasks.ReportImportDataChanges do
     |> String.replace(~r/\s+/, " ")
   end
 
+  defp format_item_header(item) do
+    "#{IO.ANSI.yellow()}Item ##{item.qtego}#{IO.ANSI.reset()}: #{item.title} #{IO.ANSI.light_black()}(#{item.price})#{IO.ANSI.reset()}"
+  end
+
   defp format_report(file1_name, file2_name, comparison) do
     separator = String.duplicate("=", 80)
     subseparator = String.duplicate("-", 80)
@@ -216,7 +255,7 @@ defmodule Mix.Tasks.ReportImportDataChanges do
         new_items_lines =
           comparison.new
           |> Enum.map(fn item ->
-            "#{item.qtego}: #{item.title} (#{item.price})"
+            format_item_header(item)
           end)
 
         ["" | new_items_lines ++ [subseparator, "NEW ITEMS (#{new_count})" | report]]
@@ -230,7 +269,7 @@ defmodule Mix.Tasks.ReportImportDataChanges do
         deleted_items_lines =
           comparison.deleted
           |> Enum.map(fn item ->
-            "#{item.qtego}: #{item.title} (#{item.price})"
+            format_item_header(item)
           end)
 
         ["" | deleted_items_lines ++ [subseparator, "DELETED ITEMS (#{deleted_count})" | report]]
@@ -244,22 +283,30 @@ defmodule Mix.Tasks.ReportImportDataChanges do
         updated_items_lines =
           comparison.updated
           |> Enum.flat_map(fn item ->
-            header = "#{item.qtego}: #{item.title} (#{item.price})"
+            header = format_item_header(item)
 
             changes =
               item.changes
-              |> Enum.map(fn
+              |> Enum.flat_map(fn
                 {:price, old_val, new_val} ->
-                  "  • Price changed from: #{old_val}, to: #{new_val}"
+                  [
+                    "    • #{IO.ANSI.cyan()}to:#{IO.ANSI.reset()} #{IO.ANSI.light_black()}#{new_val}#{IO.ANSI.reset()}",
+                    "    • #{IO.ANSI.cyan()}from:#{IO.ANSI.reset()} #{IO.ANSI.light_black()}#{old_val}#{IO.ANSI.reset()}",
+                    "  • #{IO.ANSI.cyan()}Price changed#{IO.ANSI.reset()}"
+                  ]
 
                 {:title, old_val, new_val} ->
-                  "  • Title changed from: \"#{old_val}\", to: \"#{new_val}\""
+                  [
+                    "    • #{IO.ANSI.cyan()}to:#{IO.ANSI.reset()} #{IO.ANSI.light_black()}\"#{new_val}\"#{IO.ANSI.reset()}",
+                    "    • #{IO.ANSI.cyan()}from:#{IO.ANSI.reset()} #{IO.ANSI.light_black()}\"#{old_val}\"#{IO.ANSI.reset()}",
+                    "  • #{IO.ANSI.cyan()}Title changed#{IO.ANSI.reset()}"
+                  ]
 
                 {:description, :changed} ->
-                  "  • Description changed"
+                  ["  • #{IO.ANSI.cyan()}Description changed#{IO.ANSI.reset()}"]
               end)
 
-            [header | changes]
+            changes ++ [header]
           end)
 
         ["" | updated_items_lines ++ [subseparator, "UPDATED ITEMS (#{updated_count})" | report]]
