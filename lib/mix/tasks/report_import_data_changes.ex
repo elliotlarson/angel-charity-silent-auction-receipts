@@ -110,4 +110,87 @@ defmodule Mix.Tasks.ReportImportDataChanges do
   end
 
   defp get_column(_row, nil), do: ""
+
+  defp compare_csv_files(file1_data, file2_data) do
+    file1_keys = MapSet.new(Map.keys(file1_data))
+    file2_keys = MapSet.new(Map.keys(file2_data))
+
+    # New items: in file2 but not in file1
+    new_keys = MapSet.difference(file2_keys, file1_keys)
+    new_items =
+      new_keys
+      |> Enum.map(fn key -> Map.get(file2_data, key) end)
+      |> Enum.sort_by(& &1.qtego)
+
+    # Deleted items: in file1 but not in file2
+    deleted_keys = MapSet.difference(file1_keys, file2_keys)
+    deleted_items =
+      deleted_keys
+      |> Enum.map(fn key -> Map.get(file1_data, key) end)
+      |> Enum.sort_by(& &1.qtego)
+
+    # Items in both files - check for updates
+    common_keys = MapSet.intersection(file1_keys, file2_keys)
+    updated_items =
+      common_keys
+      |> Enum.map(fn key ->
+        item1 = Map.get(file1_data, key)
+        item2 = Map.get(file2_data, key)
+        detect_changes(item1, item2)
+      end)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.sort_by(& &1.qtego)
+
+    %{
+      new: new_items,
+      deleted: deleted_items,
+      updated: updated_items
+    }
+  end
+
+  defp detect_changes(item1, item2) do
+    changes = []
+
+    # Check price changes
+    changes =
+      if normalize_for_comparison(item1.price) != normalize_for_comparison(item2.price) do
+        [{:price, item1.price, item2.price} | changes]
+      else
+        changes
+      end
+
+    # Check title changes
+    changes =
+      if normalize_for_comparison(item1.title) != normalize_for_comparison(item2.title) do
+        [{:title, item1.title, item2.title} | changes]
+      else
+        changes
+      end
+
+    # Check description changes (only report that it changed, not full diff)
+    changes =
+      if normalize_for_comparison(item1.description) != normalize_for_comparison(item2.description) do
+        [{:description, :changed} | changes]
+      else
+        changes
+      end
+
+    # If there are changes, return the updated item with changes
+    if length(changes) > 0 do
+      %{
+        qtego: item2.qtego,
+        title: item2.title,
+        price: item2.price,
+        changes: Enum.reverse(changes)
+      }
+    else
+      nil
+    end
+  end
+
+  defp normalize_for_comparison(value) do
+    value
+    |> String.trim()
+    |> String.replace(~r/\s+/, " ")
+  end
 end
