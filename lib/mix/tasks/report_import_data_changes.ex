@@ -152,6 +152,7 @@ defmodule Mix.Tasks.ReportImportDataChanges do
 
     # New items: in file2 but not in file1
     new_keys = MapSet.difference(file2_keys, file1_keys)
+
     new_items =
       new_keys
       |> Enum.map(fn key -> Map.get(file2_data, key) end)
@@ -159,6 +160,7 @@ defmodule Mix.Tasks.ReportImportDataChanges do
 
     # Deleted items: in file1 but not in file2
     deleted_keys = MapSet.difference(file1_keys, file2_keys)
+
     deleted_items =
       deleted_keys
       |> Enum.map(fn key -> Map.get(file1_data, key) end)
@@ -166,6 +168,7 @@ defmodule Mix.Tasks.ReportImportDataChanges do
 
     # Items in both files - check for updates
     common_keys = MapSet.intersection(file1_keys, file2_keys)
+
     updated_items =
       common_keys
       |> Enum.map(fn key ->
@@ -204,7 +207,8 @@ defmodule Mix.Tasks.ReportImportDataChanges do
 
     # Check description changes (only report that it changed, not full diff)
     changes =
-      if normalize_for_comparison(item1.description) != normalize_for_comparison(item2.description) do
+      if normalize_for_comparison(item1.description) !=
+           normalize_for_comparison(item2.description) do
         [{:description, :changed} | changes]
       else
         changes
@@ -316,7 +320,11 @@ defmodule Mix.Tasks.ReportImportDataChanges do
 
     # Summary
     report = [separator | report]
-    report = ["Summary: #{new_count} new, #{deleted_count} deleted, #{updated_count} updated" | report]
+
+    report = [
+      "Summary: #{new_count} new, #{deleted_count} deleted, #{updated_count} updated" | report
+    ]
+
     report = [separator | report]
     report = ["" | report]
 

@@ -7,7 +7,18 @@ Generating silent auction receipts for Angel Charity's 2025 Angel Ball Silent Au
 When you receive a new CSV file from Angel Charity, follow these steps:
 
 1. **Place CSV file** in `db/auction_items_source_data/`
-2. **Process CSV to database** with AI extraction:
+
+2. **(Optional) Review changes** from previous CSV:
+
+   ```bash
+   mix report_import_data_changes
+   ```
+
+   - Shows new, deleted, and updated items
+   - Helps verify data before processing
+   - Colored output for easy reading
+
+3. **Process CSV to database** with AI extraction:
 
    ```bash
    mix process_auction_items
@@ -18,7 +29,7 @@ When you receive a new CSV file from Angel Charity, follow these steps:
    - Changes detected automatically (unchanged items skipped)
    - Data saved to SQLite database
 
-3. **Generate PDF and HTML receipts**:
+4. **Generate PDF and HTML receipts**:
 
    ```bash
    mix generate_receipts
@@ -30,7 +41,7 @@ When you receive a new CSV file from Angel Charity, follow these steps:
    - Files named: `receipt_<item_id>_<short_title>.[pdf|html]` (single line item)
    - Or: `receipt_<item_id>_<n>_of_<total>_<short_title>.[pdf|html]` (multiple line items)
 
-4. **Sync to DropBox** (for sharing with collaborators):
+5. **Sync to DropBox** (for sharing with collaborators):
 
    ```bash
    mix sync_receipts
@@ -40,7 +51,7 @@ When you receive a new CSV file from Angel Charity, follow these steps:
    - Uses rsync for efficient incremental transfers
    - Removes files from DropBox that no longer exist locally
 
-5. **Review outputs**:
+6. **Review outputs**:
    - Check `receipts/pdf/` for printable PDFs
    - Check `receipts/html/` for web-viewable versions
 
@@ -150,6 +161,74 @@ Processing complete!
 Total items in database: 122
 Total line items in database: 137
 ```
+
+## Reporting CSV Changes
+
+Track changes between consecutive CSV imports to understand what was added, removed, or updated:
+
+```bash
+mix report_import_data_changes
+```
+
+The task will:
+
+1. Find all CSV files in `db/auction_items_source_data/`
+2. Sort them chronologically by filename date
+3. Compare each consecutive pair of files
+4. Generate a detailed report showing:
+   - **New items** - Items added in the newer file
+   - **Deleted items** - Items removed from the newer file
+   - **Updated items** - Items with price, title, or description changes
+
+### Report Format
+
+The report uses color coding for easy reading:
+
+- **Item #XXX** - Yellow
+- **Item titles** - White
+- **Prices** - Gray
+- **Field labels** - Cyan
+- **Changed values** - Gray
+
+### Example Output
+
+```
+================================================================================
+Changes from 20251205_auction_items.csv to 20251210_auction_items.csv
+================================================================================
+
+NEW ITEMS (3)
+--------------------------------------------------------------------------------
+Item #270: Weekend Getaway Package ($1,500.00)
+Item #271: Golf Foursome ($800.00)
+Item #272: Wine Collection ($2,400.00)
+
+DELETED ITEMS (1)
+--------------------------------------------------------------------------------
+Item #123: Old Item Package ($500.00)
+
+UPDATED ITEMS (5)
+--------------------------------------------------------------------------------
+Item #103: One Year Monthly Landscaping Services ($1,200.00)
+  • Price changed
+    • from: $1,000.00
+    • to: $1,200.00
+  • Title changed
+    • from: "Landscaping Services"
+    • to: "One Year Monthly Landscaping Services"
+
+Item #105: Design Consultation ($2,069.00)
+  • Description changed
+
+================================================================================
+Summary: 3 new, 1 deleted, 5 updated
+================================================================================
+```
+
+This is useful for:
+- Understanding what changed between CSV versions
+- Verifying data updates before processing
+- Tracking auction item modifications over time
 
 ## Generating Receipts
 
