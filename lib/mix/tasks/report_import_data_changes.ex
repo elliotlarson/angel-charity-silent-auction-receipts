@@ -49,12 +49,55 @@ defmodule Mix.Tasks.ReportImportDataChanges do
 
         Mix.shell().info("")
 
+        # Show baseline report for first file
+        first_file = List.first(csv_files)
+        show_baseline_report(first_file)
+
         # Process consecutive pairs
         csv_files
         |> Enum.chunk_every(2, 1, :discard)
         |> Enum.each(fn [file1, file2] ->
           process_comparison(file1, file2)
         end)
+    end
+  end
+
+  defp show_baseline_report(filename) do
+    try do
+      data = parse_csv(filename)
+
+      separator = String.duplicate("=", 80)
+      subseparator = String.duplicate("-", 80)
+
+      items =
+        data
+        |> Map.values()
+        |> Enum.sort_by(& &1.qtego, :desc)
+
+      item_count = length(items)
+
+      Mix.shell().info(separator)
+      Mix.shell().info("Baseline: Items in #{filename}")
+      Mix.shell().info(separator)
+      Mix.shell().info("")
+      Mix.shell().info("ITEMS (#{item_count})")
+      Mix.shell().info(subseparator)
+
+      items
+      |> Enum.reverse()
+      |> Enum.each(fn item ->
+        Mix.shell().info(format_item_header(item))
+      end)
+
+      Mix.shell().info("")
+      Mix.shell().info(separator)
+      Mix.shell().info("Total: #{item_count} items")
+      Mix.shell().info(separator)
+      Mix.shell().info("")
+    rescue
+      error ->
+        Mix.shell().error("Error reading baseline file #{filename}:")
+        Mix.shell().error(Exception.message(error))
     end
   end
 
