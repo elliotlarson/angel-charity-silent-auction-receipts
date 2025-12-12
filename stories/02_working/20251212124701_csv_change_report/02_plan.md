@@ -8,11 +8,11 @@ Create a Mix task `mix report_import_data_changes` that compares consecutive CSV
 
 ### Step 1: Create the Mix Task Module
 
-- [ ] Create `lib/mix/tasks/report_import_data_changes.ex`
-- [ ] Define module `Mix.Tasks.ReportImportDataChanges`
-- [ ] Add `use Mix.Task` and `@shortdoc`
-- [ ] Define NimbleCSV parser (same as in `ProcessAuctionItems`)
-- [ ] Create `run/1` function to bootstrap the task
+- [x] Create `lib/mix/tasks/report_import_data_changes.ex`
+- [x] Define module `Mix.Tasks.ReportImportDataChanges`
+- [x] Add `use Mix.Task` and `@shortdoc`
+- [x] Define NimbleCSV parser (same as in `ProcessAuctionItems`)
+- [x] Create `run/1` function to bootstrap the task
 
 **Files to create:**
 
@@ -27,10 +27,10 @@ Create a Mix task `mix report_import_data_changes` that compares consecutive CSV
 
 ### Step 2: CSV File Discovery and Sorting
 
-- [ ] Implement `list_csv_files/0` to find all CSV files in `db/auction_items_source_data/`
-- [ ] Sort files chronologically by extracting date from filename pattern `YYYYMMDD_*`
-- [ ] Handle files with different naming patterns (e.g., `auction_Items` vs `auction_items`)
-- [ ] Display found files to user with file count
+- [x] Implement `list_csv_files/0` to find all CSV files in `db/auction_items_source_data/`
+- [x] Sort files chronologically by extracting date from filename pattern `YYYYMMDD_*`
+- [x] Handle files with different naming patterns (e.g., `auction_Items` vs `auction_items`)
+- [x] Display found files to user with file count
 
 **Implementation details:**
 
@@ -49,11 +49,11 @@ Create a Mix task `mix report_import_data_changes` that compares consecutive CSV
 
 ### Step 3: CSV Parsing Function
 
-- [ ] Create `parse_csv/1` function to parse a single CSV file
-- [ ] Handle CSV structure: summary row (row 1), headers (row 2), data rows
-- [ ] Extract key fields: Qtego #, Item Donated Title, Value, Detailed Item Description
-- [ ] Return a map of `%{qtego_id => %{qtego, title, price, description}}`
-- [ ] Normalize values (trim whitespace, handle case sensitivity)
+- [x] Create `parse_csv/1` function to parse a single CSV file
+- [x] Handle CSV structure: summary row (row 1), headers (row 2), data rows
+- [x] Extract key fields: Qtego #, Item Donated Title, Value, Detailed Item Description
+- [x] Return a map of `%{qtego_id => %{qtego, title, price, description}}`
+- [x] Normalize values (trim whitespace, handle case sensitivity)
 
 **Implementation details:**
 
@@ -73,12 +73,12 @@ Create a Mix task `mix report_import_data_changes` that compares consecutive CSV
 
 ### Step 4: Comparison Logic
 
-- [ ] Create `compare_csv_files/2` function that takes two parsed CSV maps
-- [ ] Identify new items (in file2, not in file1)
-- [ ] Identify deleted items (in file1, not in file2)
-- [ ] Identify updated items (in both, but with changes)
-- [ ] For updated items, detect which fields changed (price, title, description)
-- [ ] Return structured comparison result
+- [x] Create `compare_csv_files/2` function that takes two parsed CSV maps
+- [x] Identify new items (in file2, not in file1)
+- [x] Identify deleted items (in file1, not in file2)
+- [x] Identify updated items (in both, but with changes)
+- [x] For updated items, detect which fields changed (price, title, description)
+- [x] Return structured comparison result
 
 **Implementation details:**
 
@@ -110,13 +110,13 @@ Create a Mix task `mix report_import_data_changes` that compares consecutive CSV
 
 ### Step 5: Report Formatting
 
-- [ ] Create `format_report/3` function to generate human-readable output
-- [ ] Accept: file1_name, file2_name, comparison_result
-- [ ] Format header: "Changes from [file1] to [file2]"
-- [ ] Format new items section
-- [ ] Format deleted items section
-- [ ] Format updated items section with bullet points for changes
-- [ ] Use ANSI colors for better readability (optional)
+- [x] Create `format_report/3` function to generate human-readable output
+- [x] Accept: file1_name, file2_name, comparison_result
+- [x] Format header: "Changes from [file1] to [file2]"
+- [x] Format new items section
+- [x] Format deleted items section
+- [x] Format updated items section with bullet points for changes
+- [x] Use ANSI colors for better readability (optional)
 
 **Report format:**
 
@@ -163,13 +163,13 @@ Summary: 3 new, 1 deleted, 5 updated
 
 ### Step 6: Main Execution Flow
 
-- [ ] In `run/1`, implement the main flow:
+- [x] In `run/1`, implement the main flow:
   1. List and sort CSV files
   2. Check if at least 2 files exist
   3. For each consecutive pair, compare and generate report
   4. Print reports to console
-- [ ] Handle edge cases (no files, only one file)
-- [ ] Add error handling for file read/parse errors
+- [x] Handle edge cases (no files, only one file)
+- [x] Add error handling for file read/parse errors
 
 **Implementation details:**
 
@@ -187,12 +187,12 @@ Summary: 3 new, 1 deleted, 5 updated
 
 ### Step 7: Testing and Validation
 
-- [ ] Test with current CSV files (20251205, 20251210, 20251212)
-- [ ] Verify new item detection (SA270 in 20251212)
-- [ ] Verify deleted item detection (SA269 deleted from 20251212)
-- [ ] Verify update detection (price changes, title changes)
-- [ ] Test with CSV files in different formats
-- [ ] Add documentation comments to functions
+- [x] Test with current CSV files (20251205, 20251210, 20251212)
+- [x] Verify new item detection (SA270 in 20251212)
+- [x] Verify deleted item detection (SA269 deleted from 20251212)
+- [x] Verify update detection (price changes, title changes)
+- [x] Test with CSV files in different formats
+- [x] Add documentation comments to functions
 
 **Acceptance criteria:**
 
