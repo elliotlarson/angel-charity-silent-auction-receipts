@@ -193,4 +193,89 @@ defmodule Mix.Tasks.ReportImportDataChanges do
     |> String.trim()
     |> String.replace(~r/\s+/, " ")
   end
+
+  defp format_report(file1_name, file2_name, comparison) do
+    separator = String.duplicate("=", 80)
+    subseparator = String.duplicate("-", 80)
+
+    new_count = length(comparison.new)
+    deleted_count = length(comparison.deleted)
+    updated_count = length(comparison.updated)
+
+    report = []
+
+    # Header
+    report = [separator | report]
+    report = ["Changes from #{file1_name} to #{file2_name}" | report]
+    report = [separator | report]
+    report = ["" | report]
+
+    # New items section
+    report =
+      if new_count > 0 do
+        new_items_lines =
+          comparison.new
+          |> Enum.map(fn item ->
+            "#{item.qtego}: #{item.title} (#{item.price})"
+          end)
+
+        ["" | new_items_lines ++ [subseparator, "NEW ITEMS (#{new_count})" | report]]
+      else
+        report
+      end
+
+    # Deleted items section
+    report =
+      if deleted_count > 0 do
+        deleted_items_lines =
+          comparison.deleted
+          |> Enum.map(fn item ->
+            "#{item.qtego}: #{item.title} (#{item.price})"
+          end)
+
+        ["" | deleted_items_lines ++ [subseparator, "DELETED ITEMS (#{deleted_count})" | report]]
+      else
+        report
+      end
+
+    # Updated items section
+    report =
+      if updated_count > 0 do
+        updated_items_lines =
+          comparison.updated
+          |> Enum.flat_map(fn item ->
+            header = "#{item.qtego}: #{item.title} (#{item.price})"
+
+            changes =
+              item.changes
+              |> Enum.map(fn
+                {:price, old_val, new_val} ->
+                  "  • Price changed from: #{old_val}, to: #{new_val}"
+
+                {:title, old_val, new_val} ->
+                  "  • Title changed from: \"#{old_val}\", to: \"#{new_val}\""
+
+                {:description, :changed} ->
+                  "  • Description changed"
+              end)
+
+            [header | changes]
+          end)
+
+        ["" | updated_items_lines ++ [subseparator, "UPDATED ITEMS (#{updated_count})" | report]]
+      else
+        report
+      end
+
+    # Summary
+    report = [separator | report]
+    report = ["Summary: #{new_count} new, #{deleted_count} deleted, #{updated_count} updated" | report]
+    report = [separator | report]
+    report = ["" | report]
+
+    # Reverse to get correct order and join
+    report
+    |> Enum.reverse()
+    |> Enum.join("\n")
+  end
 end
