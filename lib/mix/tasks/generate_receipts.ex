@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.GenerateReceipts do
   use Mix.Task
+  import Ecto.Query
   alias Receipts.LineItem
+  alias Receipts.Item
   alias Receipts.ReceiptGenerator
   alias Receipts.ChromicPDFHelper
   alias Receipts.Config
@@ -18,7 +20,15 @@ defmodule Mix.Tasks.GenerateReceipts do
     File.mkdir_p!(pdf_dir)
     File.mkdir_p!(html_dir)
 
-    line_items = Repo.all(LineItem)
+    line_items =
+      from(li in LineItem,
+        join: i in Item,
+        on: li.item_id == i.id,
+        order_by: [asc: i.item_identifier, asc: li.identifier],
+        preload: [item: i]
+      )
+      |> Repo.all()
+
     total = length(line_items)
 
     cleanup_orphan_files(line_items, pdf_dir, html_dir)
@@ -49,9 +59,6 @@ defmodule Mix.Tasks.GenerateReceipts do
   end
 
   defp generate_receipt(line_item, index, total, pdf_dir, html_dir) do
-    # Preload item for display
-    line_item = Repo.preload(line_item, :item)
-
     base_filename = LineItem.receipt_filename(line_item)
     pdf_path = Path.join(pdf_dir, "#{base_filename}.pdf")
     html_path = Path.join(html_dir, "#{base_filename}.html")
@@ -106,7 +113,7 @@ defmodule Mix.Tasks.GenerateReceipts do
   defp combine_pdfs(line_items, pdf_dir) do
     Mix.shell().info("\nCombining all PDFs into a single file...")
 
-    # Get all PDF paths in sorted order
+    # Get all PDF paths (line_items already sorted by item_identifier)
     pdf_paths =
       line_items
       |> Enum.map(fn line_item ->
