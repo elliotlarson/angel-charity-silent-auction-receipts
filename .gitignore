@@ -28,6 +28,10 @@ receipts-*.tar
 # Test database (keep test data out of repo)
 db/receipts_test.db*
 
+# Dev database WAL files (keep main db, ignore WAL temp files)
+db/receipts_dev.db-shm
+db/receipts_dev.db-wal
+
 # AI processing cache
 db/auction_items_source_data/cache/
 receipts/pdf/*
