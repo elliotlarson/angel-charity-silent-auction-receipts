@@ -16,6 +16,7 @@ This is an Elixir project called "Receipts" for processing auction item data fro
 - `mix test test/path/to/test.exs:42` - Run a specific test at line 42
 - `mix format` - Format code according to .formatter.exs
 - `mix format --check-formatted` - Check if code is formatted
+- `mix generate_combined_pdf <item_ids>` - Generate combined PDF for specified item IDs (comma-delimited)
 
 ### Dependencies
 
@@ -65,6 +66,7 @@ Mix tasks for this project follow the pattern `mix task_name` and are used for p
 - `mix generate_receipts` - Generate PDF and HTML receipts for all items from database, plus a combined PDF (combined_receipts.pdf)
 - `mix generate_receipt <item_id>` - Generate fresh HTML and PDF for one item from database
 - `mix regenerate_receipt_pdf <item_id>` - Regenerate PDF from existing edited HTML
+- `mix generate_combined_pdf <item_ids>` - Generate combined PDF for specified item IDs (e.g., `mix generate_combined_pdf 101,103,105`)
 - `mix migrate_json_to_db` - One-time migration from JSON files to database
 
 ### Database
