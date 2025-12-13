@@ -195,7 +195,7 @@ The report uses color coding for easy reading:
 ```
 ================================================================================
 Changes from 20251205_auction_items.csv to 20251210_auction_items.csv
-================================================================================
+--------------------------------------------------------------------------------
 
 NEW ITEMS (3)
 --------------------------------------------------------------------------------
@@ -220,12 +220,13 @@ Item #103: One Year Monthly Landscaping Services ($1,200.00)
 Item #105: Design Consultation ($2,069.00)
   • Description changed
 
-================================================================================
+--------------------------------------------------------------------------------
 Summary: 3 new, 1 deleted, 5 updated
 ================================================================================
 ```
 
 This is useful for:
+
 - Understanding what changed between CSV versions
 - Verifying data updates before processing
 - Tracking auction item modifications over time

@@ -3,7 +3,7 @@
 ## Progress Checklist
 
 - [x] Step 1: Add mix task for generating combined PDF with specified item IDs
-- [ ] Step 2: Update CLAUDE.md documentation with new mix task
+- [x] Step 2: Update CLAUDE.md documentation with new mix task
 
 ## Overview
 
