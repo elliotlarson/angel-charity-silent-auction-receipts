@@ -42,11 +42,12 @@ defmodule Receipts.ReceiptGenerator do
       end
 
     # Build footer text with line item identifier if multiple line items
-    item_label = if line_item_count > 1 do
-      "Item ##{item_number} (#{line_item.identifier})"
-    else
-      "Item ##{item_number}"
-    end
+    item_label =
+      if line_item_count > 1 do
+        "Item ##{item_number} (#{line_item.identifier})"
+      else
+        "Item ##{item_number}"
+      end
 
     # Render footer template with item label
     footer_html = EEx.eval_string(@footer_template, assigns: %{item_label: item_label})

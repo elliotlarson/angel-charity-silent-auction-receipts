@@ -146,9 +146,7 @@ defmodule Mix.Tasks.GenerateReceipts do
         {output, _code} ->
           Mix.shell().error("Failed to combine PDFs using ghostscript")
           Mix.shell().error(output)
-          Mix.shell().info(
-            "Hint: Install ghostscript with 'brew install ghostscript' on macOS"
-          )
+          Mix.shell().info("Hint: Install ghostscript with 'brew install ghostscript' on macOS")
 
           :error
       end
