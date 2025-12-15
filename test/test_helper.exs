@@ -11,7 +11,8 @@ chromic_config = [
    session_pool: [
      init_timeout: String.to_integer(System.get_env("CHROMIC_PDF_INIT_TIMEOUT") || "5000"),
      timeout: String.to_integer(System.get_env("CHROMIC_PDF_TIMEOUT") || "5000"),
-     checkout_timeout: String.to_integer(System.get_env("CHROMIC_PDF_CHECKOUT_TIMEOUT") || "5000"),
+     checkout_timeout:
+       String.to_integer(System.get_env("CHROMIC_PDF_CHECKOUT_TIMEOUT") || "5000"),
      size: 2
    ]}
 ]
