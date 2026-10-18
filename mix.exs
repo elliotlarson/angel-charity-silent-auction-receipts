@@ -29,8 +29,8 @@ defmodule Receipts.MixProject do
       {:ecto, "~> 3.11"},
       {:ecto_sql, "~> 3.11"},
       {:ecto_sqlite3, "~> 0.17"},
-      {:req, "~> 0.5.0"},
-      {:dotenvy, "~> 1.1.1"},
+      {:req, "~> 0.7.5"},
+      {:dotenvy, "~> 1.2.1"},
       {:chromic_pdf, "~> 1.17"},
       {:number, "~> 1.0"}
     ]
