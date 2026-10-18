@@ -13,6 +13,8 @@ updates:
           - "ecto*"
       development:
         dependency-type: "development"
+      mix-minor-patch:
+        update-types: ["minor", "patch"]
 
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
@@ -21,3 +23,6 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 3
+    groups:
+      github-actions-minor-patch:
+        update-types: ["minor", "patch"]
